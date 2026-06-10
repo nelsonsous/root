@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Piano Mágico 🎹</title>
+  <meta name="description" content="Um piano divertido para crianças aprenderem a tocar as primeiras músicas.">
+  <meta name="theme-color" content="#4c1d95">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Piano Mágico">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Ecrã inicial -->
+  <section id="screen-home" class="screen active">
+    <div class="home-inner">
+      <h1 class="logo">🎹 Piano Mágico</h1>
+      <p class="tagline">Toca, aprende e diverte-te!</p>
+      <div class="home-buttons">
+        <button class="big-btn btn-free" id="btn-free">
+          <span class="big-emoji">🎵</span>
+          <span>Tocar à Vontade</span>
+        </button>
+        <button class="big-btn btn-learn" id="btn-learn">
+          <span class="big-emoji">⭐</span>
+          <span>Aprender Músicas</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Escolher música -->
+  <section id="screen-songs" class="screen">
+    <header class="bar">
+      <button class="icon-btn" data-goto="home" aria-label="Voltar">⬅️</button>
+      <h2>Escolhe uma música</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div id="song-list" class="song-list"></div>
+  </section>
+
+  <!-- Piano -->
+  <section id="screen-piano" class="screen">
+    <header class="bar piano-bar">
+      <button class="icon-btn" id="btn-back-piano" aria-label="Voltar">⬅️</button>
+      <div id="learn-info" class="learn-info hidden">
+        <div class="learn-title-row">
+          <span id="learn-title" class="learn-title"></span>
+          <span id="learn-count" class="learn-count"></span>
+        </div>
+        <div class="progress"><div id="progress-fill" class="progress-fill"></div></div>
+      </div>
+      <h2 id="free-title" class="free-title">Toca à vontade! 🎵</h2>
+      <span class="bar-spacer"></span>
+      <button class="icon-btn" id="btn-demo" title="Ouvir a música">👂</button>
+      <button class="icon-btn" id="btn-restart" title="Recomeçar">🔄</button>
+      <button class="icon-btn" id="btn-mic" title="Ouvir o teu piano (microfone)">🎤</button>
+      <button class="icon-btn" id="btn-labels" title="Nomes das notas">🏷️</button>
+    </header>
+    <div class="kb-scroll" id="kb-scroll">
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+  </section>
+
+  <!-- Festa de parabéns -->
+  <div id="celebrate" class="celebrate hidden">
+    <div class="celebrate-card">
+      <div class="celebrate-emoji">🎉</div>
+      <h2>Parabéns!</h2>
+      <p id="celebrate-song"></p>
+      <div id="celebrate-stars" class="celebrate-stars"></div>
+      <div class="celebrate-buttons">
+        <button class="big-btn btn-free" id="btn-again">🔄 Outra vez</button>
+        <button class="big-btn btn-learn" id="btn-more-songs">🎶 Mais músicas</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

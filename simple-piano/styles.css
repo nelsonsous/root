@@ -1,0 +1,307 @@
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg1: #4c1d95;
+  --bg2: #7c3aed;
+  --white-key-w: clamp(52px, 7.5vw, 88px);
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(160deg, var(--bg1), var(--bg2));
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+}
+.screen.active { display: flex; }
+.hidden { display: none !important; }
+
+/* ---------- Ecrã inicial ---------- */
+.home-inner {
+  margin: auto;
+  text-align: center;
+  padding: 24px;
+}
+.logo {
+  font-size: clamp(2.2rem, 8vw, 4rem);
+  margin: 0 0 8px;
+  text-shadow: 0 4px 12px rgba(0,0,0,.35);
+}
+.tagline {
+  font-size: clamp(1rem, 3.5vw, 1.5rem);
+  opacity: .9;
+  margin: 0 0 40px;
+}
+.home-buttons {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.big-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: bold;
+  color: #fff;
+  border: none;
+  border-radius: 28px;
+  padding: 28px 36px;
+  min-width: 210px;
+  cursor: pointer;
+  box-shadow: 0 8px 0 rgba(0,0,0,.25), 0 14px 30px rgba(0,0,0,.3);
+  transition: transform .1s, box-shadow .1s;
+}
+.big-btn:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 rgba(0,0,0,.25), 0 6px 14px rgba(0,0,0,.3);
+}
+.btn-free  { background: linear-gradient(180deg, #34d399, #059669); }
+.btn-learn { background: linear-gradient(180deg, #fbbf24, #d97706); }
+.big-emoji { font-size: 2.6rem; }
+
+/* ---------- Barra superior ---------- */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  flex: 0 0 auto;
+}
+.bar h2 { margin: 0; font-size: 1.3rem; }
+.bar-spacer { flex: 1; }
+.icon-btn {
+  font-size: 1.5rem;
+  background: rgba(255,255,255,.18);
+  border: none;
+  border-radius: 16px;
+  width: 52px;
+  height: 52px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: transform .1s, background .15s;
+}
+.icon-btn:active { transform: scale(.9); background: rgba(255,255,255,.32); }
+.icon-btn.active { background: rgba(255,255,255,.45); }
+#btn-mic.active {
+  background: #dc2626;
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+@keyframes micPulse { 50% { box-shadow: 0 0 0 6px rgba(220,38,38,.35); } }
+
+/* ---------- Lista de músicas ---------- */
+.song-list {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom));
+}
+.song-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font: inherit;
+  text-align: left;
+  color: #fff;
+  background: rgba(255,255,255,.14);
+  border: 2px solid rgba(255,255,255,.25);
+  border-radius: 22px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform .1s, background .15s;
+}
+.song-card:active { transform: scale(.96); background: rgba(255,255,255,.28); }
+.song-emoji { font-size: 2.4rem; }
+.song-name { font-size: 1.1rem; font-weight: bold; display: block; }
+.song-meta { font-size: .95rem; opacity: .85; }
+.song-best { margin-left: auto; font-size: 1.1rem; letter-spacing: 2px; }
+
+/* ---------- Piano ---------- */
+#screen-piano { background: linear-gradient(180deg, var(--bg1), var(--bg2) 55%, #2e1065); }
+
+.free-title { font-size: 1.2rem; }
+.learn-info { flex: 1 1 auto; min-width: 0; }
+.learn-title-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+.learn-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.learn-count { opacity: .85; white-space: nowrap; }
+.progress {
+  height: 14px;
+  background: rgba(0,0,0,.3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #34d399, #fbbf24);
+  transition: width .25s;
+}
+
+.kb-scroll {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  align-items: stretch;
+  padding: 6px 10px calc(10px + env(safe-area-inset-bottom));
+  scrollbar-width: none;
+}
+.kb-scroll::-webkit-scrollbar { display: none; }
+
+.keyboard {
+  position: relative;
+  display: flex;
+  height: 100%;
+  min-height: 220px;
+  margin: 0 auto;
+  touch-action: none;
+}
+
+.key { cursor: pointer; }
+
+.key.white {
+  position: relative;
+  width: var(--white-key-w);
+  flex: 0 0 var(--white-key-w);
+  background: linear-gradient(180deg, #fff, #e8e6f0);
+  border: 2px solid #3b2a6b;
+  border-radius: 0 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 10px;
+  gap: 6px;
+}
+.key.white.down {
+  background: linear-gradient(180deg, #ddd8f0, #c9c2e8);
+  transform: translateY(2px);
+}
+
+.key.black {
+  position: absolute;
+  top: 0;
+  width: calc(var(--white-key-w) * .62);
+  height: 58%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #3f3f46, #18181b);
+  border: 2px solid #000;
+  border-radius: 0 0 10px 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 8px;
+}
+.key.black.down { background: linear-gradient(180deg, #27272a, #09090b); }
+
+.key-label {
+  font-size: clamp(.8rem, 1.8vw, 1.05rem);
+  font-weight: bold;
+  color: #fff;
+  border-radius: 99px;
+  padding: 3px 8px;
+  min-width: 2em;
+  text-align: center;
+  pointer-events: none;
+}
+.key.black .key-label { font-size: .72rem; padding: 2px 5px; }
+
+/* Tecla alvo no modo aprender */
+.key.target { animation: pulse .8s ease-in-out infinite; }
+.key.white.target { background: linear-gradient(180deg, #fef08a, #fbbf24); }
+.key.black.target { background: linear-gradient(180deg, #b45309, #78350f); }
+.key.target::after {
+  content: "⭐";
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.6rem;
+  animation: bounce .8s ease-in-out infinite;
+  pointer-events: none;
+}
+.key.black.target::after { font-size: 1.1rem; top: 6px; }
+@keyframes pulse  { 50% { filter: brightness(1.18); } }
+@keyframes bounce { 50% { transform: translateX(-50%) translateY(8px); } }
+
+/* Demonstração */
+.key.white.demo { background: linear-gradient(180deg, #bae6fd, #38bdf8); }
+.key.black.demo { background: linear-gradient(180deg, #0369a1, #075985); }
+
+/* Tecla errada */
+.key.wrong { animation: shake .3s; }
+.key.white.wrong { background: linear-gradient(180deg, #fecaca, #f87171); }
+@keyframes shake {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ---------- Celebração ---------- */
+.celebrate {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 10, 70, .75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.celebrate-card {
+  background: linear-gradient(160deg, #7c3aed, #4c1d95);
+  border: 3px solid rgba(255,255,255,.4);
+  border-radius: 32px;
+  padding: 28px 36px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  animation: pop .35s ease-out;
+  max-width: 90vw;
+}
+@keyframes pop { from { transform: scale(.6); opacity: 0; } }
+.celebrate-emoji { font-size: 3.5rem; }
+.celebrate-card h2 { margin: 8px 0 4px; font-size: 2rem; }
+.celebrate-stars { font-size: 2.6rem; letter-spacing: 6px; margin: 10px 0 18px; }
+.celebrate-stars .star { display: inline-block; animation: starIn .5s backwards; }
+.celebrate-stars .star:nth-child(2) { animation-delay: .25s; }
+.celebrate-stars .star:nth-child(3) { animation-delay: .5s; }
+@keyframes starIn { from { transform: scale(0) rotate(-180deg); } }
+.celebrate-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.celebrate-buttons .big-btn { padding: 14px 22px; min-width: 0; font-size: 1.05rem; border-radius: 18px; }
+
+/* Confetes */
+.confetti {
+  position: fixed;
+  top: -20px;
+  font-size: 1.6rem;
+  z-index: 60;
+  pointer-events: none;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(720deg); }
+}
