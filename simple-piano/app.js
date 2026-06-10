@@ -153,6 +153,147 @@ function playNote(midi, duration = 1.6, velocity = 1) {
   }
 }
 
+/* ==================== Ouvir um piano verdadeiro ==================== */
+/* Duas vias: microfone (funciona no iPhone/iPad) e Web MIDI por cabo
+   USB (Chrome/Edge em Android e PC — o Safari/iOS não suporta MIDI). */
+
+let micStream = null;
+let micAnalyser = null;
+let micTimer = null;
+let micBuf = null;
+let micNoteOn = false;       // há uma nota a soar neste momento
+let micCand = null;          // nota candidata (precisa de 2 leituras seguidas)
+let micCandCount = 0;
+let micLastFired = null;
+let lastTouchTime = 0;       // para o microfone ignorar o som das teclas do ecrã
+
+async function toggleMic() {
+  if (micStream) { stopMic(); return; }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
+  } catch (err) {
+    alert("Não consegui ligar o microfone 😢\nVerifica as permissões do navegador.");
+    return;
+  }
+  micStream = stream;
+  const ctx = getAudio();
+  const src = ctx.createMediaStreamSource(micStream);
+  micAnalyser = ctx.createAnalyser();
+  micAnalyser.fftSize = 2048;
+  src.connect(micAnalyser);
+  micBuf = new Float32Array(micAnalyser.fftSize);
+  micTimer = setInterval(micTick, 70);
+  document.getElementById("btn-mic").classList.add("active");
+}
+
+function stopMic() {
+  clearInterval(micTimer);
+  micTimer = null;
+  if (micStream) micStream.getTracks().forEach((t) => t.stop());
+  micStream = null;
+  micAnalyser = null;
+  micNoteOn = false;
+  micCand = null;
+  micCandCount = 0;
+  micLastFired = null;
+  document.getElementById("btn-mic").classList.remove("active");
+}
+
+function micTick() {
+  if (!micAnalyser) return;
+  if (demoTimers.length) return;                  // não ouvir a demonstração
+  if (Date.now() - lastTouchTime < 500) return;   // não ouvir as teclas do ecrã
+
+  micAnalyser.getFloatTimeDomainData(micBuf);
+  let rms = 0;
+  for (let i = 0; i < micBuf.length; i++) rms += micBuf[i] * micBuf[i];
+  rms = Math.sqrt(rms / micBuf.length);
+  if (rms < 0.008) {
+    // silêncio: a próxima nota (mesmo repetida) conta como novo toque
+    micNoteOn = false;
+    micCand = null;
+    micCandCount = 0;
+    return;
+  }
+
+  const freq = autoCorrelate(micBuf, audioCtx.sampleRate);
+  if (freq < 60 || freq > 2200) return;
+  const midi = Math.round(69 + 12 * Math.log2(freq / 440));
+
+  if (midi === micCand) micCandCount++;
+  else { micCand = midi; micCandCount = 1; }
+
+  if (micCandCount >= 2 && (!micNoteOn || midi !== micLastFired)) {
+    micNoteOn = true;
+    micLastFired = midi;
+    onExternalNote(midi, true);
+  }
+}
+
+/* Deteção de altura por autocorrelação (boa para uma nota de cada vez) */
+function autoCorrelate(buf, sampleRate) {
+  let size = buf.length;
+
+  // recortar o silêncio nas pontas
+  const thres = 0.2;
+  let r1 = 0, r2 = size - 1;
+  for (let i = 0; i < size / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+  for (let i = 1; i < size / 2; i++) if (Math.abs(buf[size - i]) < thres) { r2 = size - i; break; }
+  buf = buf.slice(r1, r2);
+  size = buf.length;
+  if (size < 64) return -1;
+
+  const c = new Float32Array(size);
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size - i; j++) c[i] += buf[j] * buf[j + i];
+  }
+
+  let d = 0;
+  while (d < size - 1 && c[d] > c[d + 1]) d++;
+  let maxval = -1, maxpos = -1;
+  for (let i = d; i < size; i++) {
+    if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+  }
+  if (maxpos <= 0 || maxpos >= size - 1) return -1;
+
+  // interpolação parabólica para afinar o resultado
+  const x1 = c[maxpos - 1], x2 = c[maxpos], x3 = c[maxpos + 1];
+  const a = (x1 + x3 - 2 * x2) / 2;
+  const b = (x3 - x1) / 2;
+  const t0 = a ? maxpos - b / (2 * a) : maxpos;
+  return sampleRate / t0;
+}
+
+/* MIDI por cabo USB (Yamaha P-145 e afins) — quando o navegador suporta */
+function setupMIDI() {
+  if (!navigator.requestMIDIAccess) return;
+  navigator.requestMIDIAccess().then((access) => {
+    const attach = () => {
+      for (const input of access.inputs.values()) input.onmidimessage = onMIDIMessage;
+    };
+    attach();
+    access.onstatechange = attach;
+  }).catch(() => {});
+}
+
+function onMIDIMessage(e) {
+  const [status, note, velocity] = e.data;
+  if ((status & 0xf0) === 0x90 && velocity > 0) onExternalNote(note, false);
+}
+
+/* Nota vinda do piano verdadeiro (microfone ou MIDI) */
+function onExternalNote(midi, tolerant) {
+  const el = keysByMidi.get(midi);
+  if (el) {
+    el.classList.add("down");
+    setTimeout(() => el.classList.remove("down"), 200);
+  }
+  if (mode === "learn") checkLearnNote(midi, el, tolerant);
+}
+
 /* ============================== Estado ============================== */
 
 const LABEL_STYLES = ["solfege", "letters", "none"];
@@ -230,6 +371,7 @@ function keyFromPoint(x, y) {
 
 function pressKey(el) {
   if (!el) return;
+  lastTouchTime = Date.now();
   const midi = Number(el.dataset.midi);
   el.classList.add("down");
   playNote(midi);
@@ -341,10 +483,15 @@ function updateProgress() {
   $("progress-fill").style.width = `${(noteIdx / song.notes.length) * 100}%`;
 }
 
-function checkLearnNote(midi, el) {
+function checkLearnNote(midi, el, tolerant = false) {
   if (demoTimers.length) return; // a demonstração está a tocar
   if (noteIdx >= song.notes.length) return; // música já terminada
-  if (midi === targetMidi()) {
+  const target = targetMidi();
+  // Com o microfone aceitamos a nota certa em qualquer oitava próxima,
+  // porque a deteção de oitava nem sempre é perfeita.
+  const correct = midi === target ||
+    (tolerant && midi % 12 === target % 12 && Math.abs(midi - target) <= 12);
+  if (correct) {
     noteIdx++;
     updateProgress();
     if (noteIdx >= song.notes.length) {
@@ -355,8 +502,10 @@ function checkLearnNote(midi, el) {
     }
   } else {
     errors++;
-    el.classList.add("wrong");
-    setTimeout(() => el.classList.remove("wrong"), 350);
+    if (el) {
+      el.classList.add("wrong");
+      setTimeout(() => el.classList.remove("wrong"), 350);
+    }
   }
 }
 
@@ -469,15 +618,24 @@ function init() {
   $("btn-free").addEventListener("click", startFree);
   $("btn-learn").addEventListener("click", () => { renderSongList(); showScreen("songs"); });
   document.querySelectorAll("[data-goto]").forEach((b) =>
-    b.addEventListener("click", () => showScreen(b.dataset.goto))
+    b.addEventListener("click", () => {
+      if (b.dataset.goto === "home") stopMic();
+      showScreen(b.dataset.goto);
+    })
   );
   $("btn-back-piano").addEventListener("click", () => {
     stopDemo();
-    showScreen(mode === "learn" ? "songs" : "home");
-    if (mode === "learn") renderSongList();
+    if (mode === "learn") {
+      renderSongList();
+      showScreen("songs"); // o microfone fica ligado para a próxima música
+    } else {
+      stopMic();
+      showScreen("home");
+    }
   });
   $("btn-restart").addEventListener("click", () => startSong(song));
   $("btn-demo").addEventListener("click", playDemo);
+  $("btn-mic").addEventListener("click", toggleMic);
   $("btn-labels").addEventListener("click", () => {
     labelStyle = LABEL_STYLES[(LABEL_STYLES.indexOf(labelStyle) + 1) % LABEL_STYLES.length];
     localStorage.setItem("piano.labels", labelStyle);
@@ -495,6 +653,8 @@ function init() {
 
   // Desbloquear o áudio no primeiro toque (iOS)
   document.addEventListener("pointerdown", getAudio, { once: true });
+
+  setupMIDI();
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").catch(() => {});

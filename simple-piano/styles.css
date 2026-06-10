@@ -98,6 +98,11 @@ html, body {
 }
 .icon-btn:active { transform: scale(.9); background: rgba(255,255,255,.32); }
 .icon-btn.active { background: rgba(255,255,255,.45); }
+#btn-mic.active {
+  background: #dc2626;
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+@keyframes micPulse { 50% { box-shadow: 0 0 0 6px rgba(220,38,38,.35); } }
 
 /* ---------- Lista de músicas ---------- */
 .song-list {
