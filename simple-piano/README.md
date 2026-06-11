@@ -53,6 +53,6 @@ python3 -m http.server 8080
 ## Notas técnicas
 
 - Sem dependências nem build: HTML + CSS + JavaScript puro.
-- O som é sintetizado com a **Web Audio API** (sem ficheiros de áudio), por isso funciona offline e a app é minúscula.
+- O som usa **amostras de um piano de cauda real**: [Salamander Grand Piano](https://github.com/Tonejs/audio) (Yamaha C5) © Alexander Holm, licença [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/). Uma amostra a cada terceira menor; as restantes notas ajustam a velocidade de reprodução (±1 meio-tom). Se as amostras falharem, há síntese Web Audio como recurso.
 - Não usa nenhuma API externa (Mistral, etc.) — não é necessária para esta funcionalidade e assim a app funciona sem internet e sem custos. Pode ser adicionada no futuro, por exemplo para gerar novas músicas ou um "professor" virtual.
 - Os ícones são gerados por `tools/make-icons.js` (`node tools/make-icons.js`), sem dependências.
