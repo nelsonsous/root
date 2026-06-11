@@ -289,6 +289,7 @@ function onExternalNote(midi, tolerant) {
   const el = keysByMidi.get(midi);
   if (el) {
     el.classList.add("down");
+    spawnParticle(el);
     setTimeout(() => el.classList.remove("down"), 200);
   }
   if (mode === "learn") checkLearnNote(midi, el, tolerant);
@@ -320,7 +321,7 @@ function buildKeyboard() {
   for (let m = LOW_MIDI; m <= HIGH_MIDI; m++) {
     if (!midiToParts(m).sharp) whites.push(m);
   }
-  kb.style.width = `calc(var(--white-key-w) * ${whites.length})`;
+  $("kb-inner").style.width = `calc(var(--white-key-w) * ${whites.length})`;
 
   whites.forEach((m) => {
     const el = document.createElement("div");
@@ -375,7 +376,20 @@ function pressKey(el) {
   const midi = Number(el.dataset.midi);
   el.classList.add("down");
   playNote(midi);
+  spawnParticle(el);
   if (mode === "learn") checkLearnNote(midi, el);
+}
+
+function spawnParticle(el) {
+  const rect = el.getBoundingClientRect();
+  const glyphs = ["🎵", "🎶", "✨", "⭐", "💜"];
+  const p = document.createElement("div");
+  p.className = "particle";
+  p.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+  p.style.left = `${rect.left + rect.width / 2 - 10 + (Math.random() * 18 - 9)}px`;
+  p.style.top = `${rect.top + 16}px`;
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 900);
 }
 
 function releaseKey(el) {
@@ -432,6 +446,47 @@ function setupInput() {
   });
 }
 
+/* ===================== Cascata de notas (modo aprender) ===================== */
+
+let laneEls = [];
+
+function buildLane() {
+  const lane = $("note-lane");
+  lane.innerHTML = "";
+  laneEls = [];
+  if (!song) return;
+  for (const [name] of song.notes) {
+    const midi = nameToMidi(name);
+    const { letter, sharp } = midiToParts(midi);
+    const b = document.createElement("div");
+    b.className = "lane-note";
+    b.textContent = SOLFEGE[letter] + (sharp ? "♯" : "");
+    b.style.background = sharp ? "#3f3f46" : NOTE_COLORS[letter];
+    lane.appendChild(b);
+    laneEls.push(b);
+  }
+  requestAnimationFrame(layoutLane);
+}
+
+function layoutLane() {
+  if (!song || !laneEls.length) return;
+  const laneH = $("note-lane").clientHeight || 118;
+  laneEls.forEach((b, i) => {
+    const rel = i - noteIdx;
+    const key = keysByMidi.get(nameToMidi(song.notes[i][0]));
+    b.style.left = `${key.offsetLeft + key.offsetWidth / 2}px`;
+    b.classList.toggle("next", rel === 0);
+    if (rel < 0) {
+      // nota já tocada: cai para o teclado e desaparece
+      b.style.top = `${laneH + 12}px`;
+      b.style.opacity = 0;
+    } else {
+      b.style.top = `${laneH - 68 - rel * 44}px`;
+      b.style.opacity = rel === 0 ? 1 : Math.max(0, 0.85 - rel * 0.18);
+    }
+  });
+}
+
 /* ============================== Modo aprender ============================== */
 
 function startSong(s) {
@@ -445,7 +500,9 @@ function startSong(s) {
   $("btn-demo").classList.remove("hidden");
   $("btn-restart").classList.remove("hidden");
   $("learn-title").textContent = `${s.emoji} ${s.title}`;
+  $("screen-piano").classList.remove("free");
   showScreen("piano");
+  buildLane();
   updateProgress();
   highlightTarget();
 }
@@ -455,10 +512,13 @@ function startFree() {
   mode = "free";
   song = null;
   clearTarget();
+  laneEls = [];
+  $("note-lane").innerHTML = "";
   $("learn-info").classList.add("hidden");
   $("free-title").classList.remove("hidden");
   $("btn-demo").classList.add("hidden");
   $("btn-restart").classList.add("hidden");
+  $("screen-piano").classList.add("free");
   showScreen("piano");
   centerKeyboard(nameToMidi("C4"), nameToMidi("C5"));
 }
@@ -476,6 +536,7 @@ function highlightTarget() {
   const el = keysByMidi.get(targetMidi());
   el.classList.add("target");
   el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  layoutLane();
 }
 
 function updateProgress() {
@@ -496,6 +557,7 @@ function checkLearnNote(midi, el, tolerant = false) {
     updateProgress();
     if (noteIdx >= song.notes.length) {
       clearTarget();
+      layoutLane();
       setTimeout(finishSong, 500);
     } else {
       highlightTarget();
@@ -590,13 +652,21 @@ function centerKeyboard(fromMidi, toMidi) {
   });
 }
 
+const CARD_COLORS = [
+  ["#f472b6", "#be185d"], ["#34d399", "#047857"], ["#fbbf24", "#b45309"],
+  ["#38bdf8", "#0369a1"], ["#a78bfa", "#6d28d9"], ["#fb7185", "#be123c"],
+];
+
 function renderSongList() {
   const list = $("song-list");
   list.innerHTML = "";
-  for (const s of SONGS) {
+  SONGS.forEach((s, i) => {
     const best = Number(localStorage.getItem(`piano.best.${s.id}`) || 0);
     const card = document.createElement("button");
     card.className = "song-card";
+    const [c1, c2] = CARD_COLORS[i % CARD_COLORS.length];
+    card.style.setProperty("--c1", c1);
+    card.style.setProperty("--c2", c2);
     card.innerHTML = `
       <span class="song-emoji">${s.emoji}</span>
       <span>
@@ -606,14 +676,31 @@ function renderSongList() {
       <span class="song-best">${best ? "⭐".repeat(best) : ""}</span>`;
     card.addEventListener("click", () => startSong(s));
     list.appendChild(card);
+  });
+}
+
+function initBackground() {
+  const bg = $("bg");
+  const glyphs = ["🎵", "🎶", "♪", "♫", "⭐", "✨"];
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement("span");
+    s.className = "bg-note";
+    s.textContent = glyphs[i % glyphs.length];
+    s.style.left = `${Math.random() * 100}vw`;
+    s.style.fontSize = `${1 + Math.random() * 1.6}rem`;
+    s.style.animationDuration = `${9 + Math.random() * 14}s`;
+    s.style.animationDelay = `${-Math.random() * 20}s`;
+    bg.appendChild(s);
   }
 }
 
 /* ============================== Arranque ============================== */
 
 function init() {
+  initBackground();
   buildKeyboard();
   setupInput();
+  window.addEventListener("resize", layoutLane);
 
   $("btn-free").addEventListener("click", startFree);
   $("btn-learn").addEventListener("click", () => { renderSongList(); showScreen("songs"); });
