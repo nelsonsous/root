@@ -17,11 +17,15 @@
 </head>
 <body>
 
+  <!-- Fundo animado -->
+  <div class="bg" id="bg" aria-hidden="true"></div>
+
   <!-- Ecrã inicial -->
   <section id="screen-home" class="screen active">
     <div class="home-inner">
-      <h1 class="logo">🎹 Piano Mágico</h1>
-      <p class="tagline">Toca, aprende e diverte-te!</p>
+      <div class="mascot" aria-hidden="true">🎹</div>
+      <h1 class="logo">Piano Mágico</h1>
+      <p class="tagline">Toca, aprende e brilha! ✨</p>
       <div class="home-buttons">
         <button class="big-btn btn-free" id="btn-free">
           <span class="big-emoji">🎵</span>
@@ -64,7 +68,10 @@
       <button class="icon-btn" id="btn-labels" title="Nomes das notas">🏷️</button>
     </header>
     <div class="kb-scroll" id="kb-scroll">
-      <div class="keyboard" id="keyboard"></div>
+      <div class="kb-inner" id="kb-inner">
+        <div class="note-lane" id="note-lane" aria-hidden="true"></div>
+        <div class="keyboard" id="keyboard"></div>
+      </div>
     </div>
   </section>
 
