@@ -282,6 +282,45 @@ html, body {
 }
 @keyframes progressShine { to { background-position: -200% 0; } }
 
+/* ---------- Modo pauta ---------- */
+.staff-wrap {
+  flex: 0 0 auto;
+  height: 132px;
+  margin: 4px 12px 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: inset 0 2px 8px rgba(46, 16, 101, .15), 0 8px 20px rgba(0, 0, 0, .25);
+  scrollbar-width: none;
+}
+.staff-wrap::-webkit-scrollbar { display: none; }
+#screen-piano.staff .note-lane { display: none; }
+
+.staff-line { stroke: #3b2a6b; stroke-width: 1.4; }
+.staff-clef { font-size: 58px; fill: #3b2a6b; }
+.staff-stem { stroke-width: 2.2; stroke-linecap: round; }
+.staff-acc { font-size: 17px; font-weight: bold; fill: #3b2a6b; }
+.staff-name {
+  font-size: 13px;
+  font-weight: 800;
+  text-anchor: middle;
+  font-family: inherit;
+}
+.staff-halo { fill: none; }
+
+.staff-note.current .staff-halo {
+  fill: rgba(250, 204, 21, .35);
+  stroke: #f59e0b;
+  stroke-width: 2.5;
+  animation: haloPulse .8s ease-in-out infinite;
+}
+@keyframes haloPulse { 50% { stroke-width: 5; } }
+.staff-note.played { opacity: .35; }
+.staff-note.played .staff-halo { fill: rgba(52, 211, 153, .3); }
+.staff-note.miss .staff-halo { fill: rgba(248, 113, 113, .5); stroke: #dc2626; stroke-width: 3; }
+
 .kb-scroll {
   flex: 1;
   overflow-x: auto;

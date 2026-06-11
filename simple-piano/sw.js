@@ -1,5 +1,5 @@
 /* Service worker do Piano Mágico — funciona totalmente offline */
-const CACHE = "piano-magico-v4";
+const CACHE = "piano-magico-v5";
 const ASSETS = [
   "./",
   "./index.html",

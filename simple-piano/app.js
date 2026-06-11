@@ -124,33 +124,80 @@ function getAudio() {
   return audioCtx;
 }
 
-function playNote(midi, duration = 1.6, velocity = 1) {
+let noiseBuf = null;
+
+function getNoise(ctx) {
+  if (!noiseBuf) {
+    noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.03), ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  }
+  return noiseBuf;
+}
+
+function playNote(midi, duration = 0, velocity = 1) {
   const ctx = getAudio();
   const t = ctx.currentTime;
   const freq = 440 * Math.pow(2, (midi - 69) / 12);
-  const env = ctx.createGain();
-  env.gain.setValueAtTime(0.0001, t);
-  env.gain.linearRampToValueAtTime(0.4 * velocity, t + 0.012);
-  env.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-  env.connect(masterOut);
+  // num piano as notas graves soam mais tempo do que as agudas
+  const dur = Math.max(duration, Math.max(1.2, 3.4 - (midi - 48) * 0.045));
 
-  // Tom "tipo piano": fundamental + harmónicos a desvanecer
+  // filtro que "fecha": ataque brilhante, cauda suave (ao contrário de um órgão)
+  const lp = ctx.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.setValueAtTime(Math.min(11000, freq * 9), t);
+  lp.frequency.exponentialRampToValueAtTime(Math.max(700, freq * 1.6), t + Math.min(1.2, dur * 0.6));
+  const out = ctx.createGain();
+  out.gain.value = velocity;
+  lp.connect(out);
+  out.connect(masterOut);
+
+  // harmónicos com decaimento próprio — os agudos morrem primeiro — e leve inarmonia
   const partials = [
-    [1, 1.0, "triangle"],
-    [2, 0.28, "sine"],
-    [3, 0.10, "sine"],
+    [1, 0.85, 1.0], [2, 0.4, 0.62], [3, 0.16, 0.4],
+    [4, 0.08, 0.3], [5, 0.05, 0.22], [6, 0.03, 0.16],
   ];
-  for (const [mult, amp, type] of partials) {
+  for (const [n, amp, frac] of partials) {
     const osc = ctx.createOscillator();
-    osc.type = type;
-    osc.frequency.value = freq * mult;
+    osc.type = "sine";
+    osc.frequency.value = freq * n * (1 + 0.0004 * n * n);
     const g = ctx.createGain();
-    g.gain.value = amp;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.33 * amp, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.18, dur * frac));
     osc.connect(g);
-    g.connect(env);
+    g.connect(lp);
     osc.start(t);
-    osc.stop(t + duration + 0.05);
+    osc.stop(t + dur + 0.1);
   }
+
+  // segunda "corda" ligeiramente desafinada dá vida ao som
+  const osc2 = ctx.createOscillator();
+  osc2.type = "triangle";
+  osc2.frequency.value = freq * 1.0019;
+  const g2 = ctx.createGain();
+  g2.gain.setValueAtTime(0.0001, t);
+  g2.gain.linearRampToValueAtTime(0.1, t + 0.008);
+  g2.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.8);
+  osc2.connect(g2);
+  g2.connect(lp);
+  osc2.start(t);
+  osc2.stop(t + dur + 0.1);
+
+  // "martelo": estalido curto de ruído no ataque
+  const noise = ctx.createBufferSource();
+  noise.buffer = getNoise(ctx);
+  const nf = ctx.createBiquadFilter();
+  nf.type = "bandpass";
+  nf.frequency.value = Math.min(8000, freq * 4);
+  nf.Q.value = 0.8;
+  const ng = ctx.createGain();
+  ng.gain.setValueAtTime(0.22 * velocity, t);
+  ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  noise.connect(nf);
+  nf.connect(ng);
+  ng.connect(out);
+  noise.start(t);
 }
 
 /* ==================== Ouvir um piano verdadeiro ==================== */
@@ -498,6 +545,110 @@ function layoutLane() {
   });
 }
 
+/* ===================== Modo pauta (notação musical) ===================== */
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const DIATONIC = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
+const STAFF_X0 = 86;
+const STAFF_SPACING = 58;
+
+let viewMode = localStorage.getItem("piano.view") || "cascade"; // "cascade" | "staff"
+let staffNoteEls = [];
+
+function svgEl(tag, attrs, parent) {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  parent.appendChild(el);
+  return el;
+}
+
+// passos diatónicos acima da linha do Mi4 (linha de baixo da pauta)
+function staffStep(midi) {
+  const { letter, octave } = midiToParts(midi);
+  return (octave - 4) * 7 + DIATONIC[letter] - 2;
+}
+
+function buildStaff() {
+  const wrap = $("staff-wrap");
+  wrap.innerHTML = "";
+  staffNoteEls = [];
+  if (!song) return;
+
+  const width = STAFF_X0 + song.notes.length * STAFF_SPACING + 30;
+  const svg = svgEl("svg", { viewBox: `0 0 ${width} 132`, width, height: 132 }, wrap);
+
+  // as 5 linhas da pauta (Mi4 em baixo, Fá5 em cima)
+  for (let i = 0; i < 5; i++) {
+    svgEl("line", { x1: 8, y1: 30 + i * 10, x2: width - 8, y2: 30 + i * 10, class: "staff-line" }, svg);
+  }
+  const clef = svgEl("text", { x: 16, y: 78, class: "staff-clef" }, svg);
+  clef.textContent = "𝄞";
+
+  song.notes.forEach(([name, d], i) => {
+    const midi = nameToMidi(name);
+    const { letter, sharp } = midiToParts(midi);
+    const x = STAFF_X0 + i * STAFF_SPACING;
+    const y = 70 - staffStep(midi) * 5;
+    const color = NOTE_COLORS[letter];
+    const g = svgEl("g", { class: "staff-note" }, svg);
+
+    // linhas suplementares abaixo da pauta (Dó4 e mais graves)
+    for (let ly = 80; ly <= y; ly += 10) {
+      svgEl("line", { x1: x - 13, y1: ly, x2: x + 13, y2: ly, class: "staff-line" }, g);
+    }
+
+    svgEl("circle", { cx: x, cy: y, r: 14, class: "staff-halo" }, g);
+
+    // haste (mínimas e semínimas; semibreves não têm)
+    if (d < 4) {
+      const up = y >= 55;
+      svgEl("line", {
+        x1: up ? x + 7.5 : x - 7.5, y1: y,
+        x2: up ? x + 7.5 : x - 7.5, y2: up ? y - 30 : y + 30,
+        class: "staff-stem", stroke: color,
+      }, g);
+    }
+    // cabeça da nota: cheia (semínima) ou vazia (mínima/semibreve)
+    svgEl("ellipse", {
+      cx: x, cy: y, rx: 8, ry: 5.8,
+      transform: `rotate(-16 ${x} ${y})`,
+      class: "staff-head",
+      fill: d >= 2 ? "none" : color,
+      stroke: color, "stroke-width": d >= 2 ? 2.6 : 1,
+    }, g);
+
+    if (sharp) {
+      const acc = svgEl("text", { x: x - 19, y: y + 5, class: "staff-acc" }, g);
+      acc.textContent = "♯";
+    }
+    const label = svgEl("text", { x, y: 124, class: "staff-name", fill: color }, g);
+    label.textContent = SOLFEGE[letter] + (sharp ? "♯" : "");
+
+    staffNoteEls.push(g);
+  });
+
+  updateStaff(false);
+}
+
+function updateStaff(smooth = true) {
+  if (!song || !staffNoteEls.length) return;
+  staffNoteEls.forEach((g, i) => {
+    g.classList.toggle("played", i < noteIdx);
+    g.classList.toggle("current", i === noteIdx);
+  });
+  const wrap = $("staff-wrap");
+  const target = STAFF_X0 + Math.min(noteIdx, song.notes.length - 1) * STAFF_SPACING;
+  wrap.scrollTo({ left: target - wrap.clientWidth * 0.35, behavior: smooth ? "smooth" : "auto" });
+}
+
+function refreshView() {
+  const staffOn = mode === "learn" && viewMode === "staff";
+  $("staff-wrap").classList.toggle("hidden", !staffOn);
+  $("screen-piano").classList.toggle("staff", viewMode === "staff");
+  $("btn-view").classList.toggle("active", viewMode === "staff");
+  if (staffOn) updateStaff(false);
+}
+
 /* ============================== Modo aprender ============================== */
 
 function startSong(s) {
@@ -511,9 +662,12 @@ function startSong(s) {
   $("btn-demo").classList.remove("hidden");
   $("btn-restart").classList.remove("hidden");
   $("learn-title").textContent = `${s.emoji} ${s.title}`;
+  $("btn-view").classList.remove("hidden");
   $("screen-piano").classList.remove("free");
   showScreen("piano");
   buildLane();
+  buildStaff();
+  refreshView();
   updateProgress();
   highlightTarget();
 }
@@ -529,7 +683,9 @@ function startFree() {
   $("free-title").classList.remove("hidden");
   $("btn-demo").classList.add("hidden");
   $("btn-restart").classList.add("hidden");
+  $("btn-view").classList.add("hidden");
   $("screen-piano").classList.add("free");
+  refreshView();
   showScreen("piano");
   centerKeyboard(nameToMidi("C4"), nameToMidi("C5"));
 }
@@ -548,6 +704,7 @@ function highlightTarget() {
   el.classList.add("target");
   el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   layoutLane();
+  updateStaff();
 }
 
 function updateProgress() {
@@ -569,6 +726,7 @@ function checkLearnNote(midi, el, tolerant = false) {
     if (noteIdx >= song.notes.length) {
       clearTarget();
       layoutLane();
+      updateStaff();
       setTimeout(finishSong, 500);
     } else {
       highlightTarget();
@@ -578,6 +736,11 @@ function checkLearnNote(midi, el, tolerant = false) {
     if (el) {
       el.classList.add("wrong");
       setTimeout(() => el.classList.remove("wrong"), 350);
+    }
+    const staffNote = staffNoteEls[noteIdx];
+    if (staffNote) {
+      staffNote.classList.add("miss");
+      setTimeout(() => staffNote.classList.remove("miss"), 350);
     }
   }
 }
@@ -734,6 +897,12 @@ function init() {
   $("btn-restart").addEventListener("click", () => startSong(song));
   $("btn-demo").addEventListener("click", playDemo);
   $("btn-mic").addEventListener("click", toggleMic);
+  $("btn-view").addEventListener("click", () => {
+    viewMode = viewMode === "staff" ? "cascade" : "staff";
+    localStorage.setItem("piano.view", viewMode);
+    refreshView();
+    if (mode === "learn") layoutLane();
+  });
   $("btn-labels").addEventListener("click", () => {
     labelStyle = LABEL_STYLES[(LABEL_STYLES.indexOf(labelStyle) + 1) % LABEL_STYLES.length];
     localStorage.setItem("piano.labels", labelStyle);
