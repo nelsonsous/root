@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestor de Tarefas</title>
+  <meta name="description" content="Gestor de tarefas por projeto: vê num relance o que tens de gerir hoje. Os dados ficam apenas no teu dispositivo." />
+  <meta name="theme-color" content="#1e40af" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topo">
+    <div class="topo-titulo">
+      <h1>Gestor de Tarefas</h1>
+      <p id="data-hoje" class="data-hoje"></p>
+    </div>
+    <nav class="abas" aria-label="Vistas">
+      <button class="aba ativa" data-vista="hoje">Hoje</button>
+      <button class="aba" data-vista="projetos">Projetos</button>
+      <button class="aba" data-vista="importar">Importar</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===================== Vista: Hoje ===================== -->
+    <section id="vista-hoje" class="vista">
+      <p id="resumo-hoje" class="resumo"></p>
+
+      <form id="form-rapido" class="form-rapido" autocomplete="off">
+        <input id="rapido-titulo" type="text" placeholder="Nova tarefa para hoje…" required />
+        <select id="rapido-projeto" aria-label="Projeto"></select>
+        <button type="submit" class="btn primario">Adicionar</button>
+      </form>
+
+      <div id="lista-hoje"></div>
+    </section>
+
+    <!-- ===================== Vista: Projetos ===================== -->
+    <section id="vista-projetos" class="vista oculta">
+      <div class="barra-projetos">
+        <button id="btn-novo-projeto" class="btn primario">+ Novo projeto</button>
+      </div>
+      <div id="lista-projetos"></div>
+    </section>
+
+    <!-- ===================== Vista: Importar ===================== -->
+    <section id="vista-importar" class="vista oculta">
+      <p class="resumo">
+        Cola aqui tarefas vindas de emails, documentos do Teams ou exportações
+        (Outlook, Planner, Excel). Uma tarefa por linha; campos separados por
+        ponto e vírgula ou tabulação são reconhecidos como
+        <strong>título; data; prioridade</strong>. Datas como
+        <code>15/06</code> ou <code>2026-06-15</code> e palavras como
+        <code>urgente</code>/<code>alta</code>/<code>baixa</code> dentro da
+        linha também são detetadas.
+      </p>
+      <form id="form-importar" autocomplete="off">
+        <label class="campo">
+          <span>Projeto de destino</span>
+          <select id="importar-projeto"></select>
+        </label>
+        <textarea id="importar-texto" rows="8"
+          placeholder="Ex.:&#10;Rever proposta comercial; 15/06; alta&#10;Enviar ata da reunião&#10;Atualizar plano do projeto 20/06"></textarea>
+        <div class="acoes">
+          <button type="button" id="btn-previsualizar" class="btn">Pré-visualizar</button>
+          <button type="submit" id="btn-importar" class="btn primario" disabled>Importar</button>
+        </div>
+      </form>
+      <div id="previsao-importar"></div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <p>Os dados ficam guardados apenas neste dispositivo (no browser).</p>
+    <div class="acoes">
+      <button id="btn-exportar" class="btn pequeno">Guardar cópia (JSON)</button>
+      <button id="btn-restaurar" class="btn pequeno">Repor cópia</button>
+      <input id="ficheiro-restauro" type="file" accept="application/json" hidden />
+    </div>
+  </footer>
+
+  <!-- ===================== Diálogo: editar tarefa ===================== -->
+  <dialog id="dialogo-tarefa">
+    <form id="form-tarefa" method="dialog">
+      <h2 id="titulo-dialogo-tarefa">Editar tarefa</h2>
+      <label class="campo"><span>Título</span>
+        <input id="tarefa-titulo" type="text" required />
+      </label>
+      <label class="campo"><span>Projeto</span>
+        <select id="tarefa-projeto"></select>
+      </label>
+      <div class="campos-lado-a-lado">
+        <label class="campo"><span>Data limite</span>
+          <input id="tarefa-data" type="date" />
+        </label>
+        <label class="campo"><span>Prioridade</span>
+          <select id="tarefa-prioridade">
+            <option value="1">Alta</option>
+            <option value="2" selected>Média</option>
+            <option value="3">Baixa</option>
+          </select>
+        </label>
+      </div>
+      <label class="campo"><span>Notas</span>
+        <textarea id="tarefa-notas" rows="3"></textarea>
+      </label>
+      <div class="acoes">
+        <button type="button" id="btn-apagar-tarefa" class="btn perigo">Apagar</button>
+        <span class="espaco"></span>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===================== Diálogo: projeto ===================== -->
+  <dialog id="dialogo-projeto">
+    <form id="form-projeto" method="dialog">
+      <h2 id="titulo-dialogo-projeto">Novo projeto</h2>
+      <label class="campo"><span>Nome</span>
+        <input id="projeto-nome" type="text" required />
+      </label>
+      <label class="campo"><span>Documentação (ligação opcional)</span>
+        <input id="projeto-doc" type="url"
+          placeholder="Cola a ligação da pasta do Teams/SharePoint…" />
+      </label>
+      <fieldset class="campo">
+        <legend>Cor</legend>
+        <div id="paleta-cores" class="paleta"></div>
+      </fieldset>
+      <div class="acoes">
+        <button type="button" id="btn-apagar-projeto" class="btn perigo">Apagar</button>
+        <span class="espaco"></span>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn primario">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

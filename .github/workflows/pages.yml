@@ -1,12 +1,17 @@
-name: Publicar Piano Mágico no GitHub Pages
+name: Publicar apps no GitHub Pages
 
-# Mantém a branch gh-pages atualizada com o conteúdo de simple-piano/.
+# Mantém a branch gh-pages atualizada: Piano Mágico na raiz e
+# Gestor de Tarefas em /tarefas/.
 # Só precisa de "contents: write" (não exige permissões de administrador).
 
 on:
   push:
-    branches: [claude/apple-watch-padel-app-jcgJO]
-    paths: ["simple-piano/**"]
+    branches:
+      - claude/apple-watch-padel-app-jcgJO
+      - claude/nova-task-management-app-s8zu0l
+    paths:
+      - "simple-piano/**"
+      - "gestor-tarefas/**"
   workflow_dispatch:
 
 permissions:
@@ -21,9 +26,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Montar o site (piano na raiz, tarefas em /tarefas)
+        run: |
+          mkdir -p dist/tarefas
+          [ -d simple-piano ] && cp -r simple-piano/. dist/
+          [ -d gestor-tarefas ] && cp -r gestor-tarefas/. dist/tarefas/
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./simple-piano
+          publish_dir: ./dist
           force_orphan: true
-          commit_message: "deploy: Piano Mágico"
+          commit_message: "deploy: Piano Mágico + Gestor de Tarefas"

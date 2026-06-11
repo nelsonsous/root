@@ -1,0 +1,16 @@
+{
+  "name": "Gestor de Tarefas",
+  "short_name": "Tarefas",
+  "description": "Gestor de tarefas por projeto: vê num relance o que tens de gerir hoje. Os dados ficam apenas no teu dispositivo.",
+  "lang": "pt",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e40af",
+  "theme_color": "#1e40af",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

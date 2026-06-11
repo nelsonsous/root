@@ -1,0 +1,387 @@
+/* Gestor de Tarefas — estilos */
+
+:root {
+  --fundo: #f1f5f9;
+  --cartao: #ffffff;
+  --texto: #0f172a;
+  --texto-suave: #64748b;
+  --borda: #e2e8f0;
+  --primaria: #1e40af;
+  --primaria-clara: #3b82f6;
+  --perigo: #dc2626;
+  --atraso: #b91c1c;
+  --atraso-fundo: #fee2e2;
+  --sombra: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --raio: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #0f172a;
+    --cartao: #1e293b;
+    --texto: #e2e8f0;
+    --texto-suave: #94a3b8;
+    --borda: #334155;
+    --primaria: #3b82f6;
+    --primaria-clara: #60a5fa;
+    --atraso: #f87171;
+    --atraso-fundo: #450a0a;
+    --sombra: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ---------- Cabeçalho e abas ---------- */
+
+.topo {
+  background: var(--primaria);
+  color: #fff;
+  padding: 16px 16px 0;
+}
+
+.topo-titulo {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.topo h1 { margin: 0; font-size: 1.35rem; }
+
+.data-hoje {
+  margin: 0;
+  opacity: 0.85;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.abas {
+  max-width: 760px;
+  margin: 12px auto 0;
+  display: flex;
+  gap: 4px;
+}
+
+.aba {
+  flex: 1;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  padding: 10px 8px;
+  border-radius: var(--raio) var(--raio) 0 0;
+  cursor: pointer;
+}
+
+.aba.ativa {
+  background: var(--fundo);
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.vista.oculta { display: none; }
+
+.resumo { color: var(--texto-suave); margin: 8px 0 16px; }
+.resumo strong { color: var(--texto); }
+
+/* ---------- Formulários ---------- */
+
+input[type="text"], input[type="date"], select, textarea {
+  font: inherit;
+  color: var(--texto);
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 9px 10px;
+  width: 100%;
+}
+
+textarea { resize: vertical; }
+
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid var(--primaria-clara);
+  outline-offset: 1px;
+}
+
+.btn {
+  font: inherit;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--texto);
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+}
+
+.btn:hover { border-color: var(--primaria-clara); }
+
+.btn.primario {
+  background: var(--primaria);
+  border-color: var(--primaria);
+  color: #fff;
+}
+
+.btn.primario:disabled { opacity: 0.5; cursor: default; }
+
+.btn.perigo { color: var(--perigo); border-color: var(--perigo); background: transparent; }
+
+.btn.pequeno { padding: 6px 10px; font-size: 0.85rem; }
+
+.form-rapido {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.form-rapido select { width: auto; max-width: 180px; }
+
+@media (max-width: 540px) {
+  .form-rapido { grid-template-columns: 1fr; }
+  .form-rapido select { max-width: none; width: 100%; }
+}
+
+.campo { display: block; margin-bottom: 12px; }
+.campo > span, .campo > legend {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  margin-bottom: 4px;
+}
+
+fieldset.campo { border: none; padding: 0; margin: 0 0 12px; }
+
+.campos-lado-a-lado { display: flex; gap: 12px; }
+.campos-lado-a-lado .campo { flex: 1; }
+
+.acoes { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.acoes .espaco { flex: 1; }
+
+/* ---------- Grupos e tarefas ---------- */
+
+.grupo-projeto {
+  background: var(--cartao);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.grupo-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-left: 5px solid var(--primaria);
+}
+
+.grupo-cabecalho h2 { margin: 0; font-size: 1.02rem; flex: 1; }
+
+.grupo-cabecalho .contagem { color: var(--texto-suave); font-size: 0.85rem; }
+
+.ligacao-doc {
+  text-decoration: none;
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.ligacao-doc:hover { background: var(--fundo); }
+
+.lista-tarefas { list-style: none; margin: 0; padding: 0; }
+
+.tarefa {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--borda);
+  cursor: pointer;
+}
+
+.tarefa:hover { background: color-mix(in srgb, var(--primaria) 5%, var(--cartao)); }
+
+.tarefa input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--primaria);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tarefa-corpo { flex: 1; min-width: 0; }
+
+.tarefa-titulo { display: block; overflow-wrap: anywhere; }
+
+.tarefa.feita .tarefa-titulo {
+  text-decoration: line-through;
+  color: var(--texto-suave);
+}
+
+.tarefa-notas {
+  display: block;
+  font-size: 0.83rem;
+  color: var(--texto-suave);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  margin-top: 2px;
+}
+
+.etiquetas { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+
+.etiqueta {
+  font-size: 0.74rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--fundo);
+  color: var(--texto-suave);
+  border: 1px solid var(--borda);
+  white-space: nowrap;
+}
+
+.etiqueta.prio-1 { color: #fff; background: var(--perigo); border-color: var(--perigo); }
+.etiqueta.prio-3 { opacity: 0.8; }
+.etiqueta.atraso { color: var(--atraso); background: var(--atraso-fundo); border-color: transparent; font-weight: 600; }
+
+.vazio {
+  text-align: center;
+  color: var(--texto-suave);
+  padding: 40px 16px;
+}
+
+.vazio .emoji { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+
+/* ---------- Vista de projetos ---------- */
+
+.barra-projetos { margin-bottom: 16px; }
+
+details.grupo-projeto > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+details.grupo-projeto > summary::-webkit-details-marker { display: none; }
+
+.grupo-cabecalho .seta { color: var(--texto-suave); transition: transform 0.15s; }
+details[open] .grupo-cabecalho .seta { transform: rotate(90deg); }
+
+.btn-editar-projeto {
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  color: var(--texto-suave);
+  padding: 4px;
+}
+
+.btn-editar-projeto:hover { color: var(--primaria); }
+
+.form-tarefa-projeto {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--borda);
+}
+
+.form-tarefa-projeto input[type="date"] { width: auto; }
+.form-tarefa-projeto select { width: auto; }
+
+@media (max-width: 540px) {
+  .form-tarefa-projeto { grid-template-columns: 1fr 1fr; }
+  .form-tarefa-projeto input[type="text"] { grid-column: 1 / -1; }
+  .form-tarefa-projeto input[type="date"], .form-tarefa-projeto select { width: 100%; }
+}
+
+details.concluidas { padding: 0 14px 10px; }
+details.concluidas summary { color: var(--texto-suave); font-size: 0.85rem; cursor: pointer; padding: 8px 0; }
+details.concluidas .lista-tarefas { border: 1px solid var(--borda); border-radius: 8px; }
+details.concluidas .tarefa:first-child { border-top: none; }
+
+/* ---------- Importar ---------- */
+
+#form-importar textarea { margin-bottom: 4px; font-size: 0.92rem; }
+
+#previsao-importar { margin-top: 16px; }
+
+#previsao-importar .grupo-projeto { padding-bottom: 4px; }
+
+code {
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 0.88em;
+}
+
+/* ---------- Diálogos ---------- */
+
+dialog {
+  border: none;
+  border-radius: var(--raio);
+  background: var(--cartao);
+  color: var(--texto);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+}
+
+dialog::backdrop { background: rgba(15, 23, 42, 0.5); }
+
+dialog h2 { margin: 0 0 16px; font-size: 1.1rem; }
+
+.paleta { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.paleta .cor {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.paleta .cor.escolhida { border-color: var(--texto); }
+
+/* ---------- Rodapé ---------- */
+
+.rodape {
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 8px 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--texto-suave);
+  font-size: 0.82rem;
+}
+
+.rodape p { margin: 0; }
+.rodape .acoes { margin: 0; }
