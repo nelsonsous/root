@@ -7,6 +7,8 @@ Uma PWA (Progressive Web App) de piano para crianças aprenderem a tocar as prim
 - **🎵 Tocar à Vontade** — piano livre com 30 teclas (Sol3 a Dó6), multi-toque e glissando (deslizar o dedo pelas teclas).
 - **⭐ Aprender Músicas** — a tecla seguinte acende com uma estrela; a criança avança ao seu ritmo, com barra de progresso, e ganha 1 a 3 estrelas no fim (guardadas no dispositivo).
 - **🎼 Modo pauta** — notação musical a sério (clave de sol, linhas suplementares, mínimas/semínimas/semibreves), com a nota atual destacada, verde quando acertam e vermelho quando falham. Alterna com a cascata de notas no botão 🎼.
+- **📖 Ler Pautas** — 4 lições com notas ao acaso para treinar leitura: Primeiras Notas (Dó–Sol), Pauta Completa, Mão Esquerda (clave de fá) e Duas Mãos. Cada repetição gera notas novas; estrelas guardadas por nível.
+- **🙌 Duas mãos** — músicas com baixo na mão esquerda e melodia na direita, mostradas em pauta dupla (clave de sol + clave de fá); a tecla-alvo fica azul quando é a vez da mão esquerda e há um crachá 👈/👉 a indicar a mão. Teclado alargado até ao Dó3.
 - **👂 Ouvir** — demonstração da música com as teclas a acender.
 - **🏷️ Nomes das notas** — alternar entre Dó-Ré-Mi, C-D-E ou sem nomes; cada nota tem uma cor própria (arco-íris).
 - **🎤 Ouvir o piano verdadeiro** — com o botão do microfone, a app deteta as notas tocadas num piano a sério (ex.: Yamaha P-145) e verifica se a música está a ser bem tocada. Funciona no iPhone/iPad.
