@@ -35,6 +35,10 @@
           <span class="big-emoji">⭐</span>
           <span>Aprender Músicas</span>
         </button>
+        <button class="big-btn btn-read" id="btn-read">
+          <span class="big-emoji">📖</span>
+          <span>Ler Pautas</span>
+        </button>
       </div>
       <p class="credit">Som: Salamander Grand Piano © Alexander Holm (CC-BY)</p>
     </div>
@@ -50,6 +54,16 @@
     <div id="song-list" class="song-list"></div>
   </section>
 
+  <!-- Lições de leitura -->
+  <section id="screen-lessons" class="screen">
+    <header class="bar">
+      <button class="icon-btn" data-goto="home" aria-label="Voltar">⬅️</button>
+      <h2>Aprender a ler pautas</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div id="lesson-list" class="song-list"></div>
+  </section>
+
   <!-- Piano -->
   <section id="screen-piano" class="screen">
     <header class="bar piano-bar">
@@ -57,6 +71,7 @@
       <div id="learn-info" class="learn-info hidden">
         <div class="learn-title-row">
           <span id="learn-title" class="learn-title"></span>
+          <span id="hand-badge" class="hand-badge"></span>
           <span id="learn-count" class="learn-count"></span>
         </div>
         <div class="progress"><div id="progress-fill" class="progress-fill"></div></div>

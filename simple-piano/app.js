@@ -10,7 +10,7 @@ const NOTE_COLORS = {
   G: "#0ea5e9", A: "#6366f1", B: "#a855f7",
 };
 
-const LOW_MIDI = 55;  // Sol3 (G3)
+const LOW_MIDI = 48;  // Dó3 (C3) — graves para a mão esquerda
 const HIGH_MIDI = 84; // Dó6 (C6)
 
 function midiToParts(midi) {
@@ -92,6 +92,37 @@ const SONGS = [
       ["C4",1],["C4",1],["D4",1],["E4",1],["E4",1.5],["D4",0.5],["D4",2],
       ["E4",1],["E4",1],["F4",1],["G4",1],["G4",1],["F4",1],["E4",1],["D4",1],
       ["C4",1],["C4",1],["D4",1],["E4",1],["D4",1.5],["C4",0.5],["C4",2],
+    ],
+  },
+  {
+    // duas mãos: a esquerda ("L") toca o baixo no início de cada compasso
+    id: "brilha2", title: "Brilha, Brilha (2 mãos)", emoji: "🙌", level: 3, bpm: 95,
+    notes: [
+      ["C3",1,"L"],["C4",1],["C4",1],["G4",1],["G4",1],
+      ["F3",1,"L"],["A4",1],["A4",1],["C3",1,"L"],["G4",2],
+      ["F3",1,"L"],["F4",1],["F4",1],["C3",1,"L"],["E4",1],["E4",1],
+      ["G3",1,"L"],["D4",1],["D4",1],["C3",1,"L"],["C4",2],
+      ["C3",1,"L"],["G4",1],["G4",1],["F3",1,"L"],["F4",1],["F4",1],
+      ["C3",1,"L"],["E4",1],["E4",1],["G3",1,"L"],["D4",2],
+      ["C3",1,"L"],["G4",1],["G4",1],["F3",1,"L"],["F4",1],["F4",1],
+      ["C3",1,"L"],["E4",1],["E4",1],["G3",1,"L"],["D4",2],
+      ["C3",1,"L"],["C4",1],["C4",1],["G4",1],["G4",1],
+      ["F3",1,"L"],["A4",1],["A4",1],["C3",1,"L"],["G4",2],
+      ["F3",1,"L"],["F4",1],["F4",1],["C3",1,"L"],["E4",1],["E4",1],
+      ["G3",1,"L"],["D4",1],["D4",1],["C3",1,"L"],["C4",2],
+    ],
+  },
+  {
+    id: "ode2", title: "Ode à Alegria (2 mãos)", emoji: "🤲", level: 3, bpm: 100,
+    notes: [
+      ["C3",1,"L"],["E4",1],["E4",1],["F4",1],["G4",1],
+      ["G3",1,"L"],["G4",1],["F4",1],["E4",1],["D4",1],
+      ["C3",1,"L"],["C4",1],["C4",1],["D4",1],["E4",1],
+      ["G3",1,"L"],["E4",1.5],["D4",0.5],["C3",1,"L"],["D4",2],
+      ["C3",1,"L"],["E4",1],["E4",1],["F4",1],["G4",1],
+      ["G3",1,"L"],["G4",1],["F4",1],["E4",1],["D4",1],
+      ["C3",1,"L"],["C4",1],["C4",1],["D4",1],["E4",1],
+      ["G3",1,"L"],["D4",1.5],["C4",0.5],["C3",1,"L"],["C4",2],
     ],
   },
   {
@@ -560,11 +591,11 @@ function buildLane() {
   lane.innerHTML = "";
   laneEls = [];
   if (!song) return;
-  for (const [name] of song.notes) {
+  for (const [name, , hand] of song.notes) {
     const midi = nameToMidi(name);
     const { letter, sharp } = midiToParts(midi);
     const b = document.createElement("div");
-    b.className = "lane-note";
+    b.className = "lane-note" + (hand === "L" ? " left" : "");
     b.textContent = SOLFEGE[letter] + (sharp ? "♯" : "");
     b.style.background = sharp ? "#3f3f46" : NOTE_COLORS[letter];
     lane.appendChild(b);
@@ -609,10 +640,16 @@ function svgEl(tag, attrs, parent) {
   return el;
 }
 
-// passos diatónicos acima da linha do Mi4 (linha de baixo da pauta)
+// passos diatónicos acima da linha do Mi4 (linha de baixo da clave de sol)
 function staffStep(midi) {
   const { letter, octave } = midiToParts(midi);
   return (octave - 4) * 7 + DIATONIC[letter] - 2;
+}
+
+// passos diatónicos acima da linha do Sol2 (linha de baixo da clave de fá)
+function staffStepBass(midi) {
+  const { letter, octave } = midiToParts(midi);
+  return (octave - 2) * 7 + DIATONIC[letter] - 4;
 }
 
 function buildStaff() {
@@ -621,43 +658,66 @@ function buildStaff() {
   staffNoteEls = [];
   if (!song) return;
 
+  // pauta dupla (clave de sol + clave de fá) quando há mão esquerda
+  const grand = song.notes.some((n) => n[2] === "L");
+  const s = grand ? 9 : 10;                  // espaço entre linhas
+  const trebleBottom = grand ? 56 : 70;      // linha do Mi4
+  const bassBottom = 128;                    // linha do Sol2 (só na pauta dupla)
+  const nameY = grand ? 166 : 124;
+  const height = grand ? 172 : 132;
+  wrap.style.height = `${height + 2}px`;
+
   const width = STAFF_X0 + song.notes.length * STAFF_SPACING + 30;
-  const svg = svgEl("svg", { viewBox: `0 0 ${width} 132`, width, height: 132 }, wrap);
+  const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, width, height }, wrap);
 
-  // as 5 linhas da pauta (Mi4 em baixo, Fá5 em cima)
-  for (let i = 0; i < 5; i++) {
-    svgEl("line", { x1: 8, y1: 30 + i * 10, x2: width - 8, y2: 30 + i * 10, class: "staff-line" }, svg);
+  const drawLines = (bottom) => {
+    for (let i = 0; i < 5; i++) {
+      svgEl("line", { x1: 8, y1: bottom - i * s, x2: width - 8, y2: bottom - i * s, class: "staff-line" }, svg);
+    }
+  };
+  drawLines(trebleBottom);
+  const treble = svgEl("text", { x: 16, y: trebleBottom + s * 0.8, class: "staff-clef", "font-size": s * 5.8 }, svg);
+  treble.textContent = "𝄞";
+  if (grand) {
+    drawLines(bassBottom);
+    const bass = svgEl("text", { x: 18, y: bassBottom - s * 0.9, class: "staff-clef", "font-size": s * 4.4 }, svg);
+    bass.textContent = "𝄢";
   }
-  const clef = svgEl("text", { x: 16, y: 78, class: "staff-clef" }, svg);
-  clef.textContent = "𝄞";
 
-  song.notes.forEach(([name, d], i) => {
+  song.notes.forEach(([name, d, hand], i) => {
     const midi = nameToMidi(name);
     const { letter, sharp } = midiToParts(midi);
+    const left = hand === "L";
     const x = STAFF_X0 + i * STAFF_SPACING;
-    const y = 70 - staffStep(midi) * 5;
+    const bottom = left ? bassBottom : trebleBottom;
+    const step = left ? staffStepBass(midi) : staffStep(midi);
+    const y = bottom - step * (s / 2);
+    const top = bottom - 4 * s;
     const color = NOTE_COLORS[letter];
-    const g = svgEl("g", { class: "staff-note" }, svg);
+    const g = svgEl("g", { class: "staff-note" + (left ? " left" : "") }, svg);
 
-    // linhas suplementares abaixo da pauta (Dó4 e mais graves)
-    for (let ly = 80; ly <= y; ly += 10) {
+    // linhas suplementares abaixo e acima da pauta
+    for (let ly = bottom + s; ly <= y; ly += s) {
+      svgEl("line", { x1: x - 13, y1: ly, x2: x + 13, y2: ly, class: "staff-line" }, g);
+    }
+    for (let ly = top - s; ly >= y; ly -= s) {
       svgEl("line", { x1: x - 13, y1: ly, x2: x + 13, y2: ly, class: "staff-line" }, g);
     }
 
-    svgEl("circle", { cx: x, cy: y, r: 14, class: "staff-halo" }, g);
+    svgEl("circle", { cx: x, cy: y, r: s * 1.4, class: "staff-halo" }, g);
 
     // haste (mínimas e semínimas; semibreves não têm)
     if (d < 4) {
-      const up = y >= 55;
+      const up = y >= bottom - 1.5 * s;
+      const sx = up ? x + s * 0.75 : x - s * 0.75;
       svgEl("line", {
-        x1: up ? x + 7.5 : x - 7.5, y1: y,
-        x2: up ? x + 7.5 : x - 7.5, y2: up ? y - 30 : y + 30,
+        x1: sx, y1: y, x2: sx, y2: up ? y - 3 * s : y + 3 * s,
         class: "staff-stem", stroke: color,
       }, g);
     }
     // cabeça da nota: cheia (semínima) ou vazia (mínima/semibreve)
     svgEl("ellipse", {
-      cx: x, cy: y, rx: 8, ry: 5.8,
+      cx: x, cy: y, rx: s * 0.8, ry: s * 0.58,
       transform: `rotate(-16 ${x} ${y})`,
       class: "staff-head",
       fill: d >= 2 ? "none" : color,
@@ -665,10 +725,10 @@ function buildStaff() {
     }, g);
 
     if (sharp) {
-      const acc = svgEl("text", { x: x - 19, y: y + 5, class: "staff-acc" }, g);
+      const acc = svgEl("text", { x: x - s * 1.9, y: y + 5, class: "staff-acc" }, g);
       acc.textContent = "♯";
     }
-    const label = svgEl("text", { x, y: 124, class: "staff-name", fill: color }, g);
+    const label = svgEl("text", { x, y: nameY, class: "staff-name", fill: color }, g);
     label.textContent = SOLFEGE[letter] + (sharp ? "♯" : "");
 
     staffNoteEls.push(g);
@@ -689,11 +749,70 @@ function updateStaff(smooth = true) {
 }
 
 function refreshView() {
-  const staffOn = mode === "learn" && viewMode === "staff";
+  const forced = !!(song && song.forceStaff);
+  const staffOn = mode === "learn" && (viewMode === "staff" || forced);
   $("staff-wrap").classList.toggle("hidden", !staffOn);
-  $("screen-piano").classList.toggle("staff", viewMode === "staff");
-  $("btn-view").classList.toggle("active", viewMode === "staff");
+  $("screen-piano").classList.toggle("staff", staffOn);
+  $("btn-view").classList.toggle("active", staffOn);
   if (staffOn) updateStaff(false);
+}
+
+/* ===================== Lições de leitura de pauta ===================== */
+
+const LESSONS = [
+  { id: "ler1", title: "Primeiras Notas", emoji: "🐣", desc: "Dó a Sol · clave de sol", count: 12,
+    poolR: ["C4", "D4", "E4", "F4", "G4"] },
+  { id: "ler2", title: "Pauta Completa", emoji: "🦉", desc: "Sol3 a Dó5 · clave de sol", count: 14,
+    poolR: ["G3", "A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"] },
+  { id: "ler3", title: "Mão Esquerda", emoji: "🐻", desc: "Dó3 a Dó4 · clave de fá", count: 12,
+    poolL: ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"] },
+  { id: "ler4", title: "Duas Mãos", emoji: "🦁", desc: "Clave de sol + clave de fá", count: 16,
+    poolR: ["C4", "D4", "E4", "F4", "G4", "A4"], poolL: ["C3", "E3", "G3", "B3"] },
+];
+
+function makeLesson(def) {
+  const notes = [];
+  let lastName = null;
+  for (let i = 0; i < def.count; i++) {
+    let pool, hand;
+    if (def.poolL && def.poolR) {
+      hand = Math.random() < 0.4 ? "L" : "R";
+      pool = hand === "L" ? def.poolL : def.poolR;
+    } else if (def.poolL) {
+      hand = "L";
+      pool = def.poolL;
+    } else {
+      hand = "R";
+      pool = def.poolR;
+    }
+    let name;
+    do { name = pool[Math.floor(Math.random() * pool.length)]; } while (name === lastName && pool.length > 1);
+    lastName = name;
+    notes.push(hand === "L" ? [name, 1, "L"] : [name, 1]);
+  }
+  return { id: def.id, lessonDef: def, forceStaff: true, title: def.title, emoji: def.emoji, bpm: 90, notes };
+}
+
+function renderLessons() {
+  const list = $("lesson-list");
+  list.innerHTML = "";
+  LESSONS.forEach((def, i) => {
+    const best = Number(localStorage.getItem(`piano.best.${def.id}`) || 0);
+    const card = document.createElement("button");
+    card.className = "song-card";
+    const [c1, c2] = CARD_COLORS[(i + 3) % CARD_COLORS.length];
+    card.style.setProperty("--c1", c1);
+    card.style.setProperty("--c2", c2);
+    card.innerHTML = `
+      <span class="song-emoji">${def.emoji}</span>
+      <span>
+        <span class="song-name">${def.title}</span>
+        <span class="song-meta">${def.desc}</span>
+      </span>
+      <span class="song-best">${best ? "⭐".repeat(best) : ""}</span>`;
+    card.addEventListener("click", () => startSong(makeLesson(def)));
+    list.appendChild(card);
+  });
 }
 
 /* ============================== Modo aprender ============================== */
@@ -709,7 +828,8 @@ function startSong(s) {
   $("btn-demo").classList.remove("hidden");
   $("btn-restart").classList.remove("hidden");
   $("learn-title").textContent = `${s.emoji} ${s.title}`;
-  $("btn-view").classList.remove("hidden");
+  song.twoHands = s.notes.some((n) => n[2] === "L");
+  $("btn-view").classList.toggle("hidden", !!s.forceStaff);
   $("screen-piano").classList.remove("free");
   showScreen("piano");
   buildLane();
@@ -742,13 +862,14 @@ function targetMidi() {
 }
 
 function clearTarget() {
-  document.querySelectorAll(".key.target").forEach((k) => k.classList.remove("target"));
+  document.querySelectorAll(".key.target").forEach((k) => k.classList.remove("target", "left"));
 }
 
 function highlightTarget() {
   clearTarget();
   const el = keysByMidi.get(targetMidi());
   el.classList.add("target");
+  if (song.notes[noteIdx][2] === "L") el.classList.add("left");
   el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   layoutLane();
   updateStaff();
@@ -757,6 +878,9 @@ function highlightTarget() {
 function updateProgress() {
   $("learn-count").textContent = `${noteIdx} / ${song.notes.length}`;
   $("progress-fill").style.width = `${(noteIdx / song.notes.length) * 100}%`;
+  const cur = song.notes[noteIdx];
+  $("hand-badge").textContent =
+    song.twoHands && cur ? (cur[2] === "L" ? "👈 esquerda" : "👉 direita") : "";
 }
 
 function checkLearnNote(midi, el, tolerant = false) {
@@ -888,11 +1012,12 @@ function renderSongList() {
     const [c1, c2] = CARD_COLORS[i % CARD_COLORS.length];
     card.style.setProperty("--c1", c1);
     card.style.setProperty("--c2", c2);
+    const hands = s.notes.some((n) => n[2] === "L") ? " · 🙌 2 mãos" : "";
     card.innerHTML = `
       <span class="song-emoji">${s.emoji}</span>
       <span>
         <span class="song-name">${s.title}</span>
-        <span class="song-meta">${"🎵".repeat(s.level)} · ${s.notes.length} notas</span>
+        <span class="song-meta">${"🎵".repeat(s.level)} · ${s.notes.length} notas${hands}</span>
       </span>
       <span class="song-best">${best ? "⭐".repeat(best) : ""}</span>`;
     card.addEventListener("click", () => startSong(s));
@@ -934,13 +1059,20 @@ function init() {
   $("btn-back-piano").addEventListener("click", () => {
     stopDemo();
     if (mode === "learn") {
-      renderSongList();
-      showScreen("songs"); // o microfone fica ligado para a próxima música
+      // o microfone fica ligado para a próxima música/lição
+      if (song && song.lessonDef) {
+        renderLessons();
+        showScreen("lessons");
+      } else {
+        renderSongList();
+        showScreen("songs");
+      }
     } else {
       stopMic();
       showScreen("home");
     }
   });
+  $("btn-read").addEventListener("click", () => { renderLessons(); showScreen("lessons"); });
   $("btn-restart").addEventListener("click", () => startSong(song));
   $("btn-demo").addEventListener("click", playDemo);
   $("btn-mic").addEventListener("click", toggleMic);
@@ -957,7 +1089,8 @@ function init() {
   });
   $("btn-again").addEventListener("click", () => {
     $("celebrate").classList.add("hidden");
-    startSong(song);
+    // numa lição, repetir gera notas novas ao acaso
+    startSong(song.lessonDef ? makeLesson(song.lessonDef) : song);
   });
   $("btn-more-songs").addEventListener("click", () => {
     $("celebrate").classList.add("hidden");
