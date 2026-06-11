@@ -1,5 +1,7 @@
-/* Service worker do Piano Mágico — funciona totalmente offline */
-const CACHE = "piano-magico-v5";
+/* Service worker do Piano Mágico
+   Estratégia: rede primeiro (atualizações aparecem logo), cache como
+   reserva (continua a funcionar totalmente offline). */
+const CACHE = "piano-magico-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -27,17 +29,22 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const { request } = event;
+  if (request.method !== "GET") return;
+  if (new URL(request.url).origin !== self.location.origin) return;
+
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (response.ok && new URL(event.request.url).origin === self.location.origin) {
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
           const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
         }
         return response;
-      });
-    })
+      })
+      .catch(() =>
+        caches.match(request, { ignoreSearch: true })
+          .then((cached) => cached || caches.match("./index.html"))
+      )
   );
 });
