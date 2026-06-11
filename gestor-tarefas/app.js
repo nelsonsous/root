@@ -81,6 +81,15 @@ function projetoPorId(id) {
   return estado.projetos.find((p) => p.id === id);
 }
 
+/* Botão 📁 que abre a pasta de documentação do projeto (Teams, SharePoint, …).
+   O stopPropagation evita que o clique também abra/feche o grupo. */
+function htmlLigacaoDoc(projeto) {
+  if (!projeto.doc) return "";
+  return `<a class="ligacao-doc" href="${escaparHTML(projeto.doc)}" target="_blank"
+    rel="noopener" title="Abrir documentação do projeto"
+    onclick="event.stopPropagation()">📁</a>`;
+}
+
 function compararTarefas(a, b) {
   return (a.data || "9999").localeCompare(b.data || "9999")
     || a.prioridade - b.prioridade
@@ -176,6 +185,7 @@ function desenharHoje() {
       <section class="grupo-projeto">
         <header class="grupo-cabecalho" style="border-left-color:${projeto.cor}">
           <h2>${escaparHTML(projeto.nome)}</h2>
+          ${htmlLigacaoDoc(projeto)}
           <span class="contagem">${doProjeto.length}</span>
         </header>
         <ul class="lista-tarefas">${doProjeto.map((t) => htmlTarefa(t)).join("")}</ul>
@@ -202,6 +212,7 @@ function desenharProjetos() {
           <header class="grupo-cabecalho" style="border-left-color:${projeto.cor}">
             <span class="seta">▶</span>
             <h2>${escaparHTML(projeto.nome)}</h2>
+            ${htmlLigacaoDoc(projeto)}
             <span class="contagem">${abertas.length} aberta${abertas.length === 1 ? "" : "s"}</span>
             <button type="button" class="btn-editar-projeto" data-editar-projeto="${projeto.id}"
               aria-label="Editar projeto">✎</button>
@@ -354,6 +365,7 @@ function abrirDialogoProjeto(projeto) {
   corEscolhida = projeto ? projeto.cor : CORES_PROJETO[estado.projetos.length % CORES_PROJETO.length];
   $("#titulo-dialogo-projeto").textContent = projeto ? "Editar projeto" : "Novo projeto";
   $("#projeto-nome").value = projeto ? projeto.nome : "";
+  $("#projeto-doc").value = projeto && projeto.doc ? projeto.doc : "";
   $("#btn-apagar-projeto").hidden = !projeto;
   desenharPaleta();
   $("#dialogo-projeto").showModal();
@@ -363,11 +375,13 @@ $("#btn-novo-projeto").addEventListener("click", () => abrirDialogoProjeto(null)
 
 $("#form-projeto").addEventListener("submit", () => {
   const nome = $("#projeto-nome").value.trim();
+  const doc = $("#projeto-doc").value.trim() || null;
   if (projetoEmEdicao) {
     projetoEmEdicao.nome = nome;
     projetoEmEdicao.cor = corEscolhida;
+    projetoEmEdicao.doc = doc;
   } else {
-    estado.projetos.push({ id: uid(), nome, cor: corEscolhida });
+    estado.projetos.push({ id: uid(), nome, cor: corEscolhida, doc });
   }
   guardar();
   desenhar();

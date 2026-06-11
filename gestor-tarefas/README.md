@@ -21,7 +21,9 @@ Excel) e colar.
   editar (projeto, data, prioridade, notas) ou apagar.
 - **Projetos** — cria projetos com cor própria, adiciona tarefas com data
   e prioridade, e consulta as concluídas. O lápis (✎) permite renomear,
-  mudar a cor ou apagar o projeto.
+  mudar a cor, apagar o projeto ou associar-lhe a **ligação da pasta de
+  documentação** (no Teams: pasta → «Copiar ligação»); fica um botão 📁
+  no cabeçalho do projeto que abre a pasta diretamente.
 - **Importar** — cola texto com uma tarefa por linha. São reconhecidos:
   - campos separados por `;` ou tabulação: `título; data; prioridade`;
   - datas no meio do texto: `15/06`, `15/06/2026` ou `2026-06-15`;
