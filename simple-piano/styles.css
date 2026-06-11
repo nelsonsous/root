@@ -108,6 +108,11 @@ html, body {
   justify-content: center;
   flex-wrap: wrap;
 }
+.credit {
+  margin: 26px 0 0;
+  font-size: .72rem;
+  opacity: .55;
+}
 
 .big-btn {
   position: relative;

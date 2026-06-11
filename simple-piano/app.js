@@ -124,6 +124,53 @@ function getAudio() {
   return audioCtx;
 }
 
+/* ==================== Som: piano de cauda real (amostras) ==================== */
+/* Salamander Grand Piano (Yamaha C5) © Alexander Holm, licença CC-BY.
+   Uma amostra a cada terceira menor; as restantes notas tocam a amostra
+   mais próxima com ajuste de velocidade (±1 meio-tom, sem perda audível). */
+
+const SAMPLE_NOTES = {
+  Fs3: 54, A3: 57, C4: 60, Ds4: 63, Fs4: 66,
+  A4: 69, C5: 72, Ds5: 75, Fs5: 78, A5: 81, C6: 84,
+};
+const sampleBuffers = new Map(); // midi -> AudioBuffer
+let samplesLoading = null;
+
+function loadSamples() {
+  if (samplesLoading) return samplesLoading;
+  const ctx = getAudio();
+  samplesLoading = Promise.all(
+    Object.entries(SAMPLE_NOTES).map(([name, midi]) =>
+      fetch(`sounds/${name}.mp3`)
+        .then((r) => { if (!r.ok) throw new Error(name); return r.arrayBuffer(); })
+        .then((data) => new Promise((res, rej) => ctx.decodeAudioData(data, res, rej)))
+        .then((buf) => sampleBuffers.set(midi, buf))
+        .catch(() => {}) // sem amostra fica a síntese como recurso
+    )
+  );
+  return samplesLoading;
+}
+
+function playNote(midi, duration = 0, velocity = 1) {
+  const ctx = getAudio();
+  if (sampleBuffers.size) {
+    let best = null;
+    for (const m of sampleBuffers.keys()) {
+      if (best === null || Math.abs(m - midi) < Math.abs(best - midi)) best = m;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = sampleBuffers.get(best);
+    src.playbackRate.value = Math.pow(2, (midi - best) / 12);
+    const g = ctx.createGain();
+    g.gain.value = velocity;
+    src.connect(g);
+    g.connect(masterOut);
+    src.start();
+    return;
+  }
+  synthNote(midi, duration, velocity);
+}
+
 let noiseBuf = null;
 
 function getNoise(ctx) {
@@ -135,7 +182,7 @@ function getNoise(ctx) {
   return noiseBuf;
 }
 
-function playNote(midi, duration = 0, velocity = 1) {
+function synthNote(midi, duration = 0, velocity = 1) {
   const ctx = getAudio();
   const t = ctx.currentTime;
   const freq = 440 * Math.pow(2, (midi - 69) / 12);
@@ -918,8 +965,9 @@ function init() {
     showScreen("songs");
   });
 
-  // Desbloquear o áudio no primeiro toque (iOS)
-  document.addEventListener("pointerdown", getAudio, { once: true });
+  // Desbloquear o áudio e carregar as amostras de piano no primeiro toque (iOS)
+  document.addEventListener("pointerdown", () => { getAudio(); loadSamples(); }, { once: true });
+  loadSamples();
 
   setupMIDI();
 
