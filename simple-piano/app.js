@@ -172,7 +172,8 @@ async function toggleMic() {
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      // AGC ligado: o sistema amplifica sons fracos (piano longe do telemóvel)
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true },
     });
   } catch (err) {
     alert("Não consegui ligar o microfone 😢\nVerifica as permissões do navegador.");
@@ -181,11 +182,14 @@ async function toggleMic() {
   micStream = stream;
   const ctx = getAudio();
   const src = ctx.createMediaStreamSource(micStream);
+  const boost = ctx.createGain();
+  boost.gain.value = 4; // amplificação extra para captar o piano à distância
   micAnalyser = ctx.createAnalyser();
   micAnalyser.fftSize = 2048;
-  src.connect(micAnalyser);
+  src.connect(boost);
+  boost.connect(micAnalyser);
   micBuf = new Float32Array(micAnalyser.fftSize);
-  micTimer = setInterval(micTick, 70);
+  micTimer = setInterval(micTick, 50);
   document.getElementById("btn-mic").classList.add("active");
 }
 
@@ -199,7 +203,9 @@ function stopMic() {
   micCand = null;
   micCandCount = 0;
   micLastFired = null;
-  document.getElementById("btn-mic").classList.remove("active");
+  const btn = document.getElementById("btn-mic");
+  btn.classList.remove("active");
+  btn.style.removeProperty("--mic-level");
 }
 
 function micTick() {
@@ -211,13 +217,18 @@ function micTick() {
   let rms = 0;
   for (let i = 0; i < micBuf.length; i++) rms += micBuf[i] * micBuf[i];
   rms = Math.sqrt(rms / micBuf.length);
-  if (rms < 0.008) {
+
+  // anel no botão 🎤 mostra o nível de som captado
+  document.getElementById("btn-mic").style.setProperty("--mic-level", Math.min(1, rms * 120).toFixed(2));
+
+  if (rms < 0.0015) {
     // silêncio: a próxima nota (mesmo repetida) conta como novo toque
     micNoteOn = false;
     micCand = null;
     micCandCount = 0;
     return;
   }
+  if (rms < 0.0025) return; // demasiado fraco para analisar com confiança
 
   const freq = autoCorrelate(micBuf, audioCtx.sampleRate);
   if (freq < 60 || freq > 2200) return;
