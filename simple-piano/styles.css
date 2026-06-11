@@ -192,11 +192,12 @@ html, body {
 }
 .icon-btn:active { transform: scale(.88); background: rgba(255, 255, 255, .34); }
 .icon-btn.active { background: rgba(255, 255, 255, .45); }
+/* O anel cresce com o nível de som captado pelo microfone */
 #btn-mic.active {
   background: linear-gradient(180deg, #f87171, #dc2626);
-  animation: micPulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 0 calc(2px + var(--mic-level, 0) * 18px) rgba(248, 113, 113, .4);
+  transition: box-shadow .08s linear;
 }
-@keyframes micPulse { 50% { box-shadow: 0 0 0 7px rgba(220, 38, 38, .3); } }
 
 /* ---------- Lista de músicas ---------- */
 .song-list {
