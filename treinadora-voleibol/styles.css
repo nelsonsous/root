@@ -1,0 +1,394 @@
+/* ===== Treinadora de Voleibol — Liga das Escolas =====
+   Cores do clube: verde, branco e preto. */
+
+:root {
+  --verde: #1b7a43;
+  --verde-claro: #2fa05c;
+  --verde-escuro: #0e4d2a;
+  --preto: #15181a;
+  --branco: #ffffff;
+  --creme: #f4f6f3;
+  --dourado: #e8b923;
+  /* Cores do equipamento (o jogo muda estas variáveis) */
+  --kit-camisola: #1b7a43;
+  --kit-calcoes: #15181a;
+  --kit-texto-camisola: #ffffff;
+  --kit-texto-calcoes: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(160deg, #0e4d2a 0%, #15181a 100%);
+  color: var(--creme);
+  min-height: 100vh;
+}
+
+.escondido { display: none !important; }
+
+.ecra { display: none; padding: 16px; }
+.ecra.ativo { display: block; }
+
+.painel {
+  max-width: 980px;
+  margin: 0 auto;
+  background: rgba(21, 24, 26, 0.85);
+  border: 2px solid var(--verde);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.painel-centro { text-align: center; }
+
+h1 { font-size: 2.2rem; margin-bottom: 4px; color: var(--branco); }
+h2 { color: var(--branco); margin-bottom: 10px; }
+h3 { color: var(--verde-claro); margin-bottom: 8px; }
+
+.logo-bola { font-size: 4rem; }
+.subtitulo { color: var(--verde-claro); font-weight: 600; margin-bottom: 14px; }
+.descricao { color: #c9d2cc; line-height: 1.55; margin-bottom: 16px; }
+
+.btn {
+  background: var(--verde);
+  color: var(--branco);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 6px;
+  transition: transform 0.1s, background 0.2s;
+}
+.btn:hover:not(:disabled) { background: var(--verde-claro); transform: translateY(-2px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-grande { font-size: 1.15rem; padding: 14px 30px; }
+.btn-secundario { background: #2c3236; }
+.btn-secundario:hover:not(:disabled) { background: #3d454a; }
+
+.botoes-linha { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+
+/* ===== Criação do treinador ===== */
+.criacao-grelha {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  margin: 18px 0;
+}
+.criacao-avatar { text-align: center; }
+#avatar-preview svg { width: 220px; height: auto; }
+#input-nome-treinador {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid var(--verde);
+  background: #1d2225;
+  color: var(--branco);
+  font-size: 1.05rem;
+  text-align: center;
+  margin-top: 8px;
+}
+.grupo-opcao { margin-bottom: 14px; }
+.opcoes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.opcao {
+  border: 2px solid #3d454a;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  background: #1d2225;
+  color: var(--creme);
+  font-size: 0.92rem;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.opcao:hover { transform: translateY(-2px); }
+.opcao.escolhida { border-color: var(--verde-claro); background: var(--verde-escuro); }
+.opcao-cor {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+/* ===== Hub ===== */
+.hub-topo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 2px solid var(--verde-escuro);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+.avatar-mini svg { width: 84px; height: auto; }
+.hub-info { flex: 1; }
+.hub-info p { color: var(--verde-claro); font-weight: 600; }
+.hub-medalhas-resumo { font-size: 1.6rem; }
+
+.hub-grelha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.cartao {
+  background: #1d2225;
+  border: 1px solid #2c3236;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.semana-dias { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.dia-pilula {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #2c3236;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.dia-pilula.feito { background: var(--verde); }
+.dia-pilula.hoje { outline: 2px solid var(--branco); }
+.dia-pilula.jogo { background: #8a6d1a; }
+
+.lista-cidades { list-style: none; }
+.lista-cidades li {
+  padding: 6px 4px;
+  border-bottom: 1px dashed #2c3236;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+.lista-cidades li.atual { color: var(--branco); font-weight: 700; }
+.lista-cidades li.ganha { color: var(--verde-claro); }
+
+.vitrina { display: flex; flex-wrap: wrap; gap: 10px; min-height: 60px; align-items: center; }
+.vitrina .medalha-mini { text-align: center; font-size: 0.7rem; color: #c9d2cc; }
+.vitrina .medalha-mini svg { width: 44px; height: auto; display: block; margin: 0 auto; }
+.vitrina-vazia { color: #6c7a72; font-style: italic; }
+
+/* ===== Plantel ===== */
+.plantel-grelha {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.cartao-jogadora {
+  background: #1d2225;
+  border: 2px solid #2c3236;
+  border-radius: 14px;
+  padding: 12px;
+  position: relative;
+}
+.cartao-jogadora.selecionavel { cursor: pointer; }
+.cartao-jogadora.selecionada { border-color: var(--verde-claro); background: var(--verde-escuro); }
+.cartao-jogadora h4 { color: var(--branco); margin-bottom: 2px; }
+.cartao-jogadora .posicao { color: var(--verde-claro); font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; }
+.cartao-cabeca { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.mini-jogadora svg { width: 46px; height: auto; display: block; }
+.numero-edit { font-size: 0.82rem; color: #c9d2cc; }
+.numero-edit input {
+  width: 52px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  border: 2px solid var(--verde);
+  background: #15181a;
+  color: var(--branco);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.stat-linha { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 0.78rem; }
+.stat-linha span:first-child { width: 72px; color: #c9d2cc; }
+.stat-barra { flex: 1; height: 8px; background: #2c3236; border-radius: 4px; overflow: hidden; }
+.stat-valor { height: 100%; background: var(--verde-claro); border-radius: 4px; }
+.stat-valor.energia { background: #d4a017; }
+
+/* ===== Equipamento do clube ===== */
+.clube-kit { margin-bottom: 14px; }
+.kit-linha { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.kit-linha > span { min-width: 76px; font-weight: 600; color: #c9d2cc; }
+.kit-linha .opcoes { margin-bottom: 0; }
+
+/* ===== Treino ===== */
+.exercicios-grelha {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.exercicio {
+  background: #1d2225;
+  border: 2px solid #2c3236;
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.exercicio:hover { border-color: var(--verde-claro); transform: translateY(-3px); }
+.exercicio .icone { font-size: 2rem; }
+.exercicio h4 { color: var(--branco); margin: 6px 0 4px; }
+.exercicio p { font-size: 0.8rem; color: #c9d2cc; }
+
+.barra-precisao {
+  position: relative;
+  display: flex;
+  height: 44px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 18px 0;
+  border: 2px solid #2c3236;
+}
+.zona { height: 100%; }
+.zona-fraca { flex: 3; background: #7a2e2e; }
+.zona-boa { flex: 2; background: #8a6d1a; }
+.zona-perfeita { flex: 1.4; background: var(--verde); }
+.cursor-precisao {
+  position: absolute;
+  top: 0; left: 0;
+  width: 6px; height: 100%;
+  background: var(--branco);
+  box-shadow: 0 0 8px var(--branco);
+}
+.linhas-treino { list-style: none; margin: 12px 0; }
+.linhas-treino li { padding: 6px 0; border-bottom: 1px dashed #2c3236; color: #d9e2dc; }
+
+/* ===== Pré-jogo ===== */
+.prejogo-contagem { color: var(--branco); margin-bottom: 8px; }
+
+/* ===== Jogo ===== */
+.painel-jogo { max-width: 760px; }
+.placar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  background: var(--preto);
+  border: 2px solid var(--verde);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+.placar-equipa { display: flex; align-items: center; gap: 10px; }
+.placar-equipa.eles { justify-content: flex-end; }
+.placar-nome { font-weight: 700; font-size: 0.9rem; }
+.placar-equipa.nos .placar-nome { color: var(--verde-claro); }
+.placar-equipa.eles .placar-nome { color: #e07b7b; }
+.placar-sets {
+  background: #2c3236; border-radius: 6px; padding: 2px 8px; font-weight: 800;
+}
+.placar-pontos { font-size: 1.7rem; font-weight: 900; color: var(--branco); }
+.placar-meio { text-align: center; font-size: 0.8rem; color: #c9d2cc; display: flex; flex-direction: column; }
+
+.campo {
+  position: relative;
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid var(--branco);
+  margin-bottom: 12px;
+  background: #c8731f;
+}
+.campo-meio-eles, .campo-meio-nos {
+  position: absolute; left: 0; right: 0; height: 50%;
+}
+.campo-meio-eles { top: 0; background: #b35f17; }
+.campo-meio-nos { bottom: 0; background: #c8731f; }
+.rede {
+  position: absolute; top: calc(50% - 3px); left: 0; right: 0; height: 6px;
+  background: repeating-linear-gradient(90deg, #fff 0 8px, #222 8px 12px);
+  z-index: 5;
+}
+.jogadora-campo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 3;
+  transition: top 0.5s, left 0.5s;
+}
+.jogadora-campo .camisola {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.8rem;
+  margin: 0 auto;
+  border: 2px solid;
+}
+.jogadora-campo.nos .camisola { background: var(--kit-camisola); color: var(--kit-texto-camisola); border-color: var(--kit-calcoes); }
+.jogadora-campo.nos.libero .camisola { background: var(--kit-calcoes); color: var(--kit-texto-calcoes); border-color: var(--kit-camisola); }
+.jogadora-campo.eles .camisola { background: #8d2f2f; color: #fff; border-color: #f3cdcd; }
+.jogadora-campo .nome-campo {
+  font-size: 0.62rem; color: #fff; text-shadow: 0 1px 2px #000; font-weight: 600;
+}
+.jogadora-campo.destaque .camisola { box-shadow: 0 0 14px 4px #ffe97a; }
+.bola {
+  position: absolute;
+  font-size: 1.3rem;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+  transition: top 0.45s ease-in-out, left 0.45s ease-in-out;
+}
+
+.comentarios {
+  background: #1d2225;
+  border: 1px solid #2c3236;
+  border-radius: 12px;
+  padding: 12px;
+  height: 130px;
+  overflow-y: auto;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.comentarios p { margin-bottom: 4px; }
+.comentarios .ponto-nos { color: var(--verde-claro); font-weight: 700; }
+.comentarios .ponto-eles { color: #e07b7b; font-weight: 700; }
+.comentarios .info-set { color: #ffd86b; font-weight: 700; }
+
+/* ===== Modal substituições ===== */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+.modal-caixa {
+  background: #15181a;
+  border: 2px solid var(--verde);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+.subs-grelha { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; }
+.subs-grelha h4 { color: var(--verde-claro); margin-bottom: 8px; }
+.sub-item {
+  background: #1d2225;
+  border: 2px solid #2c3236;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+.sub-item.escolhida { border-color: var(--verde-claro); background: var(--verde-escuro); }
+.sub-item .energia-txt { color: #d4a017; font-size: 0.75rem; }
+
+/* ===== Resultado / medalha ===== */
+.medalha-grande svg { width: 170px; height: auto; }
+.medalha-grande { animation: aparecer-medalha 0.9s ease-out; }
+@keyframes aparecer-medalha {
+  0% { transform: scale(0.2) rotate(-20deg); opacity: 0; }
+  70% { transform: scale(1.15) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.medalha-texto { font-size: 1.1rem; color: #ffd86b; font-weight: 700; margin-top: 8px; }
+
+/* ===== Responsivo ===== */
+@media (max-width: 720px) {
+  .criacao-grelha, .hub-grelha, .subs-grelha { grid-template-columns: 1fr; }
+  .campo { height: 240px; }
+  h1 { font-size: 1.6rem; }
+  .placar-nome { display: none; }
+}
