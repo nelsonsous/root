@@ -448,14 +448,27 @@ const $ = (id) => document.getElementById(id);
 
 /* ============================== Teclado ============================== */
 
-function buildKeyboard() {
+let kbLow = LOW_MIDI;
+let kbHigh = HIGH_MIDI;
+
+function isWhite(m) {
+  return !midiToParts(m).sharp;
+}
+
+function buildKeyboard(low = LOW_MIDI, high = HIGH_MIDI) {
+  // alargar até teclas brancas nas pontas
+  while (!isWhite(low)) low--;
+  while (!isWhite(high)) high++;
+  kbLow = low;
+  kbHigh = high;
+
   const kb = $("keyboard");
   kb.innerHTML = "";
   keysByMidi.clear();
 
   const whites = [];
-  for (let m = LOW_MIDI; m <= HIGH_MIDI; m++) {
-    if (!midiToParts(m).sharp) whites.push(m);
+  for (let m = low; m <= high; m++) {
+    if (isWhite(m)) whites.push(m);
   }
   $("kb-inner").style.width = `calc(var(--white-key-w) * ${whites.length})`;
 
@@ -471,8 +484,8 @@ function buildKeyboard() {
     keysByMidi.set(m, el);
   });
 
-  for (let m = LOW_MIDI; m <= HIGH_MIDI; m++) {
-    if (!midiToParts(m).sharp) continue;
+  for (let m = low; m <= high; m++) {
+    if (isWhite(m)) continue;
     const whiteIdx = whites.indexOf(m - 1); // tecla branca à esquerda
     const el = document.createElement("div");
     el.className = "key black";
@@ -486,7 +499,30 @@ function buildKeyboard() {
     keysByMidi.set(m, el);
   }
 
+  sizeKeyboard();
   applyLabels();
+}
+
+/* Dimensiona as teclas para o teclado caber inteiro no ecrã;
+   só fica mais largo (com deslize) se ficarem mais estreitas que 46px. */
+function sizeKeyboard() {
+  let nWhite = 0;
+  for (let m = kbLow; m <= kbHigh; m++) if (isWhite(m)) nWhite++;
+  const avail = $("kb-scroll").clientWidth - 20;
+  if (avail <= 0 || !nWhite) return;
+  const w = Math.max(46, Math.min(92, avail / nWhite));
+  $("kb-inner").style.setProperty("--white-key-w", `${w.toFixed(2)}px`);
+}
+
+/* Só desliza o teclado se a tecla não estiver totalmente visível */
+function ensureKeyVisible(el) {
+  const sc = $("kb-scroll");
+  if (sc.scrollWidth <= sc.clientWidth + 2) return; // cabe tudo: nunca mexe
+  const left = el.offsetLeft;
+  const right = left + el.offsetWidth;
+  if (left < sc.scrollLeft + 8 || right > sc.scrollLeft + sc.clientWidth - 8) {
+    el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }
 }
 
 function applyLabels() {
@@ -832,6 +868,14 @@ function startSong(s) {
   $("btn-view").classList.toggle("hidden", !!s.forceStaff);
   $("screen-piano").classList.remove("free");
   showScreen("piano");
+  // teclado limitado ao alcance da música (+1 tecla de folga) para caber no ecrã
+  let lo = 127, hi = 0;
+  for (const [name] of s.notes) {
+    const m = nameToMidi(name);
+    lo = Math.min(lo, m);
+    hi = Math.max(hi, m);
+  }
+  buildKeyboard(Math.max(LOW_MIDI, lo - 2), Math.min(HIGH_MIDI, hi + 2));
   buildLane();
   buildStaff();
   refreshView();
@@ -854,6 +898,7 @@ function startFree() {
   $("screen-piano").classList.add("free");
   refreshView();
   showScreen("piano");
+  buildKeyboard(); // teclado completo no modo livre
   centerKeyboard(nameToMidi("C4"), nameToMidi("C5"));
 }
 
@@ -870,7 +915,7 @@ function highlightTarget() {
   const el = keysByMidi.get(targetMidi());
   el.classList.add("target");
   if (song.notes[noteIdx][2] === "L") el.classList.add("left");
-  el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  ensureKeyVisible(el);
   layoutLane();
   updateStaff();
 }
@@ -971,7 +1016,7 @@ function playDemo() {
       const el = keysByMidi.get(midi);
       playNote(midi, Math.max(0.5, (ms / 1000) * 1.2));
       el.classList.add("demo");
-      el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      ensureKeyVisible(el);
       setTimeout(() => el.classList.remove("demo"), ms * 0.85);
     }, time));
     time += ms;
@@ -1046,7 +1091,10 @@ function init() {
   initBackground();
   buildKeyboard();
   setupInput();
-  window.addEventListener("resize", layoutLane);
+  window.addEventListener("resize", () => {
+    sizeKeyboard();
+    layoutLane();
+  });
 
   $("btn-free").addEventListener("click", startFree);
   $("btn-learn").addEventListener("click", () => { renderSongList(); showScreen("songs"); });
