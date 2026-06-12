@@ -259,9 +259,7 @@ function lookColors(look) {
   };
 }
 
-function drawFigure(ctx, x, gy, s, poseIn, look, now) {
-  const P = Object.assign({}, P_STAND, poseIn);
-  const C = lookColors(look);
+function computeJoints(P, x, gy, s) {
   const rot = P.rot || 0;
   const RAD = Math.PI / 180;
   const pt = (p, a, len) => {
@@ -275,6 +273,15 @@ function drawFigure(ctx, x, gy, s, poseIn, look, now) {
   const elbB = pt(sh, P.auB, LEN.uarm), handB = pt(elbB, P.alB, LEN.larm);
   const kneF = pt(hip, P.ltF, LEN.thigh), footF = pt(kneF, P.lsF, LEN.shin), toeF = pt(footF, P.lsF + 78, LEN.foot);
   const kneB = pt(hip, P.ltB, LEN.thigh), footB = pt(kneB, P.lsB, LEN.shin), toeB = pt(footB, P.lsB + 78, LEN.foot);
+  return { pt, hip, sh, headC, elbF, handF, elbB, handB, kneF, footF, toeF, kneB, footB, toeB };
+}
+
+function drawFigure(ctx, x, gy, s, poseIn, look, now) {
+  const P = Object.assign({}, P_STAND, poseIn);
+  const C = lookColors(look);
+  const { pt, hip, sh, headC, elbF, handF, elbB, handB, kneF, footF, toeF, kneB, footB, toeB } =
+    computeJoints(P, x, gy, s);
+  const RAD = Math.PI / 180;
 
   const seg = (pts, w, col) => {
     ctx.strokeStyle = col; ctx.lineWidth = w * s;
@@ -477,7 +484,7 @@ function playSequence(canvas, items, look, opts, onDone) {
     const sev = Math.min(1, Math.max(0, (1 - (it.q == null ? 1 : it.q)) * 1.25));
     pose = applyFlaw(pose, it.flaw, sev, now);
     const ax = opts.coachLook ? w * 0.55 : w * 0.5;
-    drawFigure(ctx, ax, gy, 2.2, pose, look, now);
+    drawFigure(ctx, ax, gy, 2.0, pose, look, now);
     ctx.fillStyle = '#7b4dbf';
     ctx.font = 'bold 14px "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
@@ -680,7 +687,7 @@ function endWeek() {
 
 /* ---------- Escolher movimento ---------- */
 
-let trainingCtx = null; // {atleta, move, q, flaw, trueStars, guess, fixOk}
+let trainingCtx = null; // {atleta, move, attempts, best}
 
 function showMoves(atleta) {
   show('screen-moves');
@@ -706,118 +713,178 @@ function showMoves(atleta) {
   $('btn-moves-back').onclick = () => showGym();
 }
 
-/* ---------- Treino ---------- */
+/* ---------- Treino: demonstra o movimento com o dedo ---------- */
+
+const TRACE_S = 2.0;       // escala da figura no treino
+const TRACE_R = 30;        // raio para "apanhar" o ponto seguinte
+let trace = null;          // estado do tracado da tentativa atual
+
+function buildTracePath(animId, cx, gy, s) {
+  const raw = [];
+  for (let i = 0; i <= 80; i++) {
+    const t = i / 80;
+    const J = computeJoints(Object.assign({}, P_STAND, samplePose(animId, t)), cx, gy, s);
+    raw.push({ t, x: J.headC[0], y: J.headC[1] });
+  }
+  // simplifica: mantem pontos com pelo menos 12px de distancia
+  const pts = [raw[0]];
+  for (const p of raw) {
+    const l = pts[pts.length - 1];
+    if (Math.hypot(p.x - l.x, p.y - l.y) >= 12) pts.push(p);
+  }
+  const last = raw[raw.length - 1];
+  if (pts[pts.length - 1] !== last) pts.push(last);
+  return pts;
+}
 
 function startTraining(atleta, move) {
-  const sk = skillDe(atleta, move.id);
-  const q = clamp(0.15 + sk / 100 * 0.55 + Math.random() * 0.25 + (atleta.fel - 50) / 400, 0.05, 0.98);
-  const flaw = FLAWS[Math.floor(Math.random() * FLAWS.length)].id;
-  trainingCtx = {
-    atleta, move, q, flaw,
-    trueStars: clamp(Math.round(q * 5 + 0.3), 1, 5),
-    guess: null, fixOk: false,
-  };
+  trainingCtx = { atleta, move, attempts: 0, best: null };
   show('screen-training');
-  $('tr-title').textContent = `${atleta.nome} demonstra: ${move.emoji} ${move.nome}`;
-  $('tr-watch').classList.remove('hidden');
-  $('tr-rate').classList.add('hidden');
-  $('tr-fix').classList.add('hidden');
+  $('tr-title').textContent = `Demonstra à ${atleta.nome}: ${move.emoji} ${move.nome}`;
+  $('tr-instr').classList.remove('hidden');
   $('tr-result').classList.add('hidden');
-  playDemo();
-  $('btn-replay').onclick = playDemo;
-  $('btn-to-rate').onclick = () => {
-    $('tr-watch').classList.add('hidden');
-    $('tr-rate').classList.remove('hidden');
-    buildStars();
-  };
+  setupTrace();
 }
 
-function playDemo() {
+function setupTrace() {
   const tc = trainingCtx;
-  playSequence($('cv-training'),
-    [{ anim: tc.move.id, q: tc.q, flaw: tc.flaw, nome: tc.move.nome }],
-    tc.atleta.look,
-    { coachLook: state.coach.look, coachName: state.coach.nome, caption: 'Observa com atenção…' },
-    null);
-}
+  const cv = $('cv-training');
+  const w = cv.width, h = cv.height;
+  const gy = h - 42; // mesmo nivel devolvido por drawGymBg
+  const cx = w * 0.55;
+  trace = {
+    pts: buildTracePath(tc.move.id, cx, gy, TRACE_S),
+    idx: 0, displayT: 0, dragging: false, finished: false,
+    devSum: 0, devCount: 0, breaks: 0,
+  };
+  window.__trace = trace; // usado pelo teste e2e
+  const toCanvas = e => {
+    const r = cv.getBoundingClientRect();
+    return [(e.clientX - r.left) * w / r.width, (e.clientY - r.top) * h / r.height];
+  };
+  const handleMove = e => {
+    const t = trace;
+    if (t.finished) return;
+    const [px, py] = toCanvas(e);
+    let guard = 0;
+    while (t.idx < t.pts.length - 1 && guard++ < 8 &&
+           Math.hypot(px - t.pts[t.idx + 1].x, py - t.pts[t.idx + 1].y) < TRACE_R) {
+      t.idx++;
+    }
+    let dmin = Infinity;
+    for (let k = Math.max(0, t.idx - 1); k <= Math.min(t.pts.length - 1, t.idx + 3); k++) {
+      dmin = Math.min(dmin, Math.hypot(px - t.pts[k].x, py - t.pts[k].y));
+    }
+    t.devSum += dmin; t.devCount++;
+    if (t.idx >= t.pts.length - 1) finishAttempt();
+  };
+  cv.onpointerdown = e => {
+    if (trace.finished) return;
+    trace.dragging = true;
+    cv.setPointerCapture(e.pointerId);
+    handleMove(e);
+  };
+  cv.onpointermove = e => { if (trace.dragging) handleMove(e); };
+  cv.onpointerup = () => {
+    if (trace.dragging) {
+      trace.dragging = false;
+      if (!trace.finished && trace.idx > 0) trace.breaks++;
+    }
+  };
 
-function buildStars() {
-  const row = $('star-row');
-  row.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
-    const sp = document.createElement('span');
-    sp.textContent = '⭐';
-    sp.onmouseenter = () => light(i);
-    sp.onmouseleave = () => light(0);
-    sp.onclick = () => {
-      trainingCtx.guess = i;
-      light(i);
-      setTimeout(showFixOptions, 350);
-    };
-    row.appendChild(sp);
-  }
-  function light(n) {
-    [...row.children].forEach((c, j) => c.classList.toggle('lit', j < n));
-  }
-}
-
-function showFixOptions() {
-  $('tr-rate').classList.add('hidden');
-  $('tr-fix').classList.remove('hidden');
-  const box = $('fix-options');
-  box.innerHTML = '';
-  const correct = FLAWS.find(f => f.id === trainingCtx.flaw);
-  const others = FLAWS.filter(f => f.id !== correct.id).sort(() => Math.random() - 0.5).slice(0, 2);
-  const opts = [correct, ...others].sort(() => Math.random() - 0.5);
-  opts.forEach(f => {
-    const b = document.createElement('button');
-    b.textContent = '💬 ' + f.fix;
-    b.onclick = () => {
-      trainingCtx.fixOk = f.id === correct.id;
-      finishTraining();
-    };
-    box.appendChild(b);
+  const ctx = cv.getContext('2d');
+  startLoop(now => {
+    ctx.clearRect(0, 0, w, h);
+    drawGymBg(ctx, w, h, 'Treino · ' + tc.move.nome);
+    const t = trace;
+    // a atleta acompanha a demonstracao da professora
+    const targetT = t.pts[t.idx].t;
+    t.displayT += (targetT - t.displayT) * 0.18;
+    drawFigure(ctx, cx, gy, TRACE_S, samplePose(tc.move.id, t.displayT), tc.atleta.look, now);
+    // caminho pontilhado
+    for (let i = 0; i < t.pts.length; i++) {
+      ctx.fillStyle = i <= t.idx ? '#e84d8a' : '#c9b6e4';
+      ctx.beginPath();
+      ctx.arc(t.pts[i].x, t.pts[i].y, i <= t.idx ? 4 : 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // estrela no fim e marcador atual (a "mao" da professora)
+    const end = t.pts[t.pts.length - 1];
+    ctx.font = '20px serif'; ctx.textAlign = 'center';
+    ctx.fillText('⭐', end.x, end.y + 7);
+    if (!t.finished) {
+      const cur = t.pts[t.idx];
+      const pulse = 8 + Math.sin(now / 200) * 2;
+      ctx.strokeStyle = '#e84d8a'; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cur.x, cur.y, pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#b06aa0';
+      ctx.font = '13px "Segoe UI", sans-serif';
+      ctx.fillText(t.idx === 0 ? 'Começa aqui! Arrasta até à ⭐' : 'Continua até à ⭐…', w / 2, h - 4);
+    }
+    ctx.fillStyle = '#7a6a86';
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.fillText(tc.atleta.nome, cx, gy + 24);
   });
 }
 
-function finishTraining() {
+function finishAttempt() {
+  const tc = trainingCtx;
+  const t = trace;
+  t.finished = true;
+  tc.attempts++;
+  const avg = t.devSum / Math.max(1, t.devCount);
+  let score = clamp(1 - (avg - 8) / 36, 0, 1) - t.breaks * 0.08;
+  score = clamp(score, 0, 1);
+  const q = clamp(0.25 + 0.7 * score + skillDe(tc.atleta, tc.move.id) / 1000, 0.05, 0.98);
+  const stars = clamp(Math.round(q * 5 + 0.3), 1, 5);
+  const attempt = { stars, q, breaks: t.breaks };
+  if (!tc.best || stars > tc.best.stars || (stars === tc.best.stars && q > tc.best.q)) tc.best = attempt;
+
+  $('tr-instr').classList.add('hidden');
+  $('tr-result').classList.remove('hidden');
+  const starsTxt = n => '⭐'.repeat(n) + '☆'.repeat(5 - n);
+  const feedback =
+    stars >= 5 ? '🤩 Demonstração perfeita! Os juízes adoraram!' :
+    stars === 4 ? '👏 Muito boa demonstração!' :
+    stars === 3 ? '🙂 Boa, mas dá para fazer melhor.' :
+    stars === 2 ? '😅 Saíste muitas vezes do caminho…' :
+    '🫣 Foi difícil de acompanhar — tenta seguir o caminho com mais calma.';
+  $('tr-result-text').innerHTML = `
+    Os juízes avaliaram a tua demonstração: <b>${starsTxt(stars)}</b><br>
+    ${feedback}
+    ${t.breaks ? `<br><small>(levantaste o dedo ${t.breaks}x — tenta fazer tudo seguido)</small>` : ''}
+    ${tc.attempts > 1 ? `<br><small>Conta a melhor das tentativas: ${starsTxt(tc.best.stars)}</small>` : ''}
+  `;
+  $('btn-retry').classList.toggle('hidden', tc.attempts >= 2);
+  $('btn-retry').onclick = () => {
+    $('tr-result').classList.add('hidden');
+    $('tr-instr').classList.remove('hidden');
+    setupTrace();
+  };
+  $('btn-tr-done').onclick = applyTraining;
+}
+
+function applyTraining() {
   const tc = trainingCtx;
   const a = tc.atleta;
-  const diff = Math.abs(tc.guess - tc.trueStars);
-  const accMult = diff === 0 ? 1.3 : diff === 1 ? 1.0 : 0.6;
-  const fixMult = tc.fixOk ? 1.25 : 0.85;
+  const starsMult = [0.45, 0.65, 0.9, 1.15, 1.4][tc.best.stars - 1];
   const cansada = a.fel < 35 ? 0.6 : 1;
-  const gain = Math.max(2, Math.round((9 + state.tier * 2.5) * accMult * fixMult * cansada * (0.8 + Math.random() * 0.4)));
+  const gain = Math.max(2, Math.round((9 + state.tier * 2.5) * starsMult * cansada * (0.85 + Math.random() * 0.3)));
   const antes = skillDe(a, tc.move.id);
-  // a primeira sessão garante sempre o nível básico do movimento
+  // a primeira sessao garante sempre o nivel basico do movimento
   a.skills[tc.move.id] = clamp(antes === 0 ? Math.max(antes + gain, 15) : antes + gain, 0, 100);
-  const aprendeu = antes === 0;
+  const subiu = skillDe(a, tc.move.id) - antes;
   a.ene = clamp(a.ene - 30, 0, 100);
-  const felDelta = -4 + (diff === 0 ? 6 : diff === 1 ? 2 : -3) + (tc.fixOk ? 4 : 0);
+  const felDelta = tc.best.stars >= 4 ? 6 : tc.best.stars === 3 ? 2 : -3;
   a.fel = clamp(a.fel + felDelta, 0, 100);
   a.acted = true;
   state.evolucao += gain;
   state.pontos += Math.round(gain / 2);
   save();
-
-  $('tr-fix').classList.add('hidden');
-  $('tr-result').classList.remove('hidden');
-  const flawTxt = FLAWS.find(f => f.id === tc.flaw).txt;
-  const stars = n => '⭐'.repeat(n) + '☆'.repeat(5 - n);
-  $('tr-result-text').innerHTML = `
-    A execução verdadeira era <b>${stars(tc.trueStars)}</b> e tu deste <b>${stars(tc.guess)}</b>.
-    ${diff === 0 ? '🎯 Avaliação perfeita! A ' + a.nome + ' percebeu exatamente o que fazer.'
-      : diff === 1 ? '👍 Boa avaliação, muito perto!'
-      : '😅 A avaliação não ajudou muito — observa com mais atenção.'}<br>
-    O problema era: <b>${flawTxt}</b>.
-    ${tc.fixOk ? '✅ Deste a correção certa!' : '❌ A correção não era essa…'}<br>
-    ${aprendeu ? '🎉 ' + a.nome + ' aprendeu o básico de ' + tc.move.nome + '!' : ''}
-    ${a.nome} evoluiu <span class="gain-up">+${skillDe(a, tc.move.id) - antes}%</span> em ${tc.move.nome}
-    (agora ${skillDe(a, tc.move.id)}%).
-    Felicidade <span class="${felDelta >= 0 ? 'gain-up' : 'gain-down'}">${felDelta >= 0 ? '+' : ''}${felDelta}</span>.
-    <br>⭐ Ganhaste <b>+${Math.round(gain / 2)}</b> Pontos de Professora pela evolução!
-  `;
-  $('btn-tr-done').onclick = () => showGym(`${a.nome} treinou ${tc.move.nome}. Bom trabalho, professora!`);
+  showGym(`${a.nome} ${antes === 0 ? 'aprendeu' : 'treinou'} ${tc.move.nome}: +${subiu}% (agora ${skillDe(a, tc.move.id)}%). ` +
+    `Felicidade ${felDelta >= 0 ? '+' : ''}${felDelta}. +${Math.round(gain / 2)} Pontos de Professora! ⭐`);
 }
 
 /* ---------- Vestiário ---------- */

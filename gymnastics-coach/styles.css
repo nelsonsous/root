@@ -141,6 +141,7 @@ canvas {
 
 /* Treino */
 #cv-training, #cv-comp, #cv-choreo { background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+#cv-training { touch-action: none; cursor: crosshair; }
 .tr-panel {
   background: var(--card); border-radius: 16px; padding: 14px;
   margin: 12px auto; max-width: 600px; text-align: center;

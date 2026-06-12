@@ -36,7 +36,7 @@
     <details class="howto">
       <summary>📖 Como jogar</summary>
       <ul>
-        <li><b>Treina</b> as atletas: escolhe um movimento (aranha, ponte, levantar…), observa a demonstração e <b>classifica-a com estrelas</b>. Depois dá a correção certa para elas evoluírem mais!</li>
+        <li><b>Treina</b> as atletas: escolhe um movimento (aranha, ponte, levantar…) e <b>demonstra-o tu com o dedo</b>, arrastando ao longo do caminho do movimento. Os juízes avaliam a tua demonstração com estrelas — quanto melhor fizeres, mais a atleta evolui!</li>
         <li>Mantém as atletas <b>felizes</b> e com <b>energia</b>: descansa-as e elogia-as.</li>
         <li>No fim de cada época, <b>monta a coreografia</b> de cada atleta com os movimentos que treinaram e ganha o campeonato.</li>
         <li>Sobe de escalão: <b>Escola → Cidade → Regional → Nacional → Internacional</b>.</li>
@@ -88,24 +88,15 @@
   <h2 id="tr-title">Treino</h2>
   <canvas id="cv-training" width="760" height="300"></canvas>
 
-  <div id="tr-watch" class="tr-panel">
-    <p>👀 Observa bem a demonstração da tua atleta…</p>
-    <button id="btn-replay">🔁 Repetir demonstração</button>
-    <button id="btn-to-rate" class="primary">Já vi! Vou classificar</button>
-  </div>
-
-  <div id="tr-rate" class="tr-panel hidden">
-    <p>⭐ Como classificas a execução? Sê justa — uma boa avaliação ajuda a atleta a aprender!</p>
-    <div id="star-row" class="star-row"></div>
-  </div>
-
-  <div id="tr-fix" class="tr-panel hidden">
-    <p>🗣 Qual é a correção mais importante para dar?</p>
-    <div id="fix-options" class="fix-options"></div>
+  <div id="tr-instr" class="tr-panel">
+    <p>✋ Agora és tu, professora! <b>Arrasta o dedo</b> (ou o rato) ao longo do caminho pontilhado,
+    do círculo rosa até à ⭐, para demonstrares o movimento. A atleta segue a tua demonstração!</p>
+    <p class="hint">Quanto mais perto do caminho e sem levantar o dedo, melhor a tua avaliação.</p>
   </div>
 
   <div id="tr-result" class="tr-panel hidden">
     <div id="tr-result-text"></div>
+    <button id="btn-retry">🔁 Tentar de novo</button>
     <button id="btn-tr-done" class="primary">Continuar</button>
   </div>
 </section>

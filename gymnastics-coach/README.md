@@ -10,9 +10,10 @@ Abre o `index.html` num browser (não precisa de servidor nem de instalação).
 ### O ciclo do jogo
 
 1. **Semanas de treino** — em cada semana, cada atleta pode fazer **uma** atividade:
-   - 🤸 **Treinar** — a professora escolhe o movimento. A atleta faz a demonstração,
-     a professora **classifica com estrelas** e escolhe a **correção** mais importante.
-     Quanto mais justa for a avaliação e mais certa a correção, mais a atleta evolui!
+   - 🤸 **Treinar** — a professora escolhe o movimento e **demonstra-o com o dedo**,
+     arrastando ao longo do caminho do movimento (a trajetória da ginasta).
+     Os juízes **avaliam a demonstração com estrelas** — quanto mais perto do caminho
+     e sem levantar o dedo, melhor a avaliação e mais a atleta evolui!
    - 🛏 **Descansar** — recupera energia e um pouco de felicidade.
    - 💖 **Elogiar** — sobe a felicidade (atletas tristes evoluem pior e têm notas piores).
 2. **Coreografia** — no fim das semanas de treino, a professora escolhe a sequência de
