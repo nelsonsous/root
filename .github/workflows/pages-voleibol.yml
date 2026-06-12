@@ -1,0 +1,30 @@
+name: Publicar Treinadora de Voleibol no GitHub Pages
+
+# Publica treinadora-voleibol/ em gh-pages/voleibol/ sem apagar o piano,
+# que continua na raiz do site.
+
+on:
+  push:
+    branches: [claude/volleyball-coaching-game-3rdoac]
+    paths: ["treinadora-voleibol/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./treinadora-voleibol
+          destination_dir: voleibol
+          keep_files: true
+          commit_message: "deploy: Treinadora de Voleibol"
