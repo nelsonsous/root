@@ -1,7 +1,7 @@
 /* Service worker do Piano Mágico
    Estratégia: rede primeiro (atualizações aparecem logo), cache como
    reserva (continua a funcionar totalmente offline). */
-const CACHE = "piano-magico-v8";
+const CACHE = "piano-magico-v9";
 const ASSETS = [
   "./",
   "./index.html",
