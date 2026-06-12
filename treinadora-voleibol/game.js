@@ -405,7 +405,12 @@ function svgAvatar(t) {
     <circle cx="119" cy="89" r="5" fill="${olhos}"/>
     <circle cx="81" cy="89" r="2.2" fill="#15181a"/>
     <circle cx="119" cy="89" r="2.2" fill="#15181a"/>
+    <circle cx="82.5" cy="87.5" r="1" fill="#ffffff"/>
+    <circle cx="120.5" cy="87.5" r="1" fill="#ffffff"/>
     ${pestanas}
+    <!-- faces coradas -->
+    <ellipse cx="72" cy="102" rx="6" ry="3.5" fill="#d9766044"/>
+    <ellipse cx="128" cy="102" rx="6" ry="3.5" fill="#d9766044"/>
     <!-- nariz e boca -->
     <path d="M98 96 Q96 104 100 106" stroke="#00000033" stroke-width="2.5" fill="none"/>
     <path d="M86 116 Q100 126 114 116" stroke="#7a3b30" stroke-width="3.5" fill="none" stroke-linecap="round"/>
@@ -414,13 +419,13 @@ function svgAvatar(t) {
 
 // Avatar de uma jogadora: cabelo sempre apanhado (coque) e joelheiras
 // postas — regras do clube para ninguém se magoar!
-function svgJogadora(j) {
+function svgJogadora(j, kit = null) {
   const pele = corDe(PELES, j.pele);
   const cabelo = corDe(CABELO_CORES, j.cabelo);
   // A líbero usa o equipamento com as cores trocadas, como no voleibol a sério.
   const libero = j.pos === "Líbero";
-  const camisola = libero ? estado.clube.calcoes : estado.clube.camisola;
-  const calcoes = libero ? estado.clube.camisola : estado.clube.calcoes;
+  const camisola = kit ? kit.camisola : (libero ? estado.clube.calcoes : estado.clube.camisola);
+  const calcoes = kit ? kit.calcoes : (libero ? estado.clube.camisola : estado.clube.calcoes);
   const textoCamisola = corTexto(camisola);
   return `
   <svg viewBox="0 0 80 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${j.nome}">
@@ -939,12 +944,12 @@ function valorGeral(j) {
 
 // Posições no campo em percentagem (as nossas em baixo, as adversárias em cima).
 const POSICOES_NOS = [
-  { x: 25, y: 62 }, { x: 50, y: 62 }, { x: 75, y: 62 },   // rede
-  { x: 25, y: 85 }, { x: 50, y: 85 }, { x: 75, y: 85 },   // defesa
+  { x: 25, y: 61 }, { x: 50, y: 61 }, { x: 75, y: 61 },   // rede
+  { x: 25, y: 83 }, { x: 50, y: 83 }, { x: 75, y: 83 },   // defesa
 ];
 const POSICOES_ELES = [
-  { x: 25, y: 38 }, { x: 50, y: 38 }, { x: 75, y: 38 },
-  { x: 25, y: 15 }, { x: 50, y: 15 }, { x: 75, y: 15 },
+  { x: 25, y: 39 }, { x: 50, y: 39 }, { x: 75, y: 39 },
+  { x: 25, y: 16 }, { x: 50, y: 16 }, { x: 75, y: 16 },
 ];
 
 function comecarJogo() {
@@ -954,15 +959,22 @@ function comecarJogo() {
     emCampo: [...escolhaTitulares],
     banco: estado.jogadoras.filter((j) => !escolhaTitulares.has(j.id)).map((j) => j.id),
     jogaram: new Set([...escolhaTitulares]),
+    stats: {},            // pontos e falhas de cada jogadora neste jogo
+    adversarias: Array.from({ length: 6 }, (_, i) => ({
+      numero: i + 1,
+      pos: "Ponta",
+      pele: PELES[aleatorio(0, PELES.length - 1)].id,
+      cabelo: CABELO_CORES[aleatorio(0, CABELO_CORES.length - 1)].id,
+    })),
     pontosNos: 0, pontosEles: 0,
     setsNos: 0, setsEles: 0,
     setAtual: 1,
     servimosNos: Math.random() < 0.5,
-    servidorIdx: 0,
     aAnimar: false,
     auto: false,
     terminado: false,
   };
+  estado.jogadoras.forEach((j) => (jogo.stats[j.id] = { pontos: 0, erros: 0 }));
   $("placar-nome-eles").textContent = cid.equipa;
   $("placar-cidade").textContent = `${cid.nome} · ${cid.pavilhao}`;
   $("comentarios").innerHTML = "";
@@ -988,20 +1000,49 @@ function desenharCampo(destaqueId = null) {
   jogo.emCampo.forEach((id, i) => {
     const j = jogadoraPorId(id);
     const div = document.createElement("div");
-    div.className = "jogadora-campo nos" + (j.pos === "Líbero" ? " libero" : "") + (id === destaqueId ? " destaque" : "");
+    div.className = "jogadora-campo nos" + (id === destaqueId ? " destaque" : "");
     div.style.left = POSICOES_NOS[i].x + "%";
     div.style.top = POSICOES_NOS[i].y + "%";
-    div.innerHTML = `<div class="camisola">${j.numero}</div><div class="nome-campo">${j.nome.split(" ")[0]}</div>`;
+    div.innerHTML = `<div class="figura">${svgJogadora(j)}</div><div class="nome-campo">${j.nome.split(" ")[0]}</div>`;
     campo.appendChild(div);
   });
 
   POSICOES_ELES.forEach((p, i) => {
+    const adv = jogo.adversarias[i];
     const div = document.createElement("div");
     div.className = "jogadora-campo eles";
     div.style.left = p.x + "%";
     div.style.top = p.y + "%";
-    div.innerHTML = `<div class="camisola">${i + 1}</div>`;
+    div.innerHTML = `<div class="figura">${svgJogadora(adv, { camisola: "#8d2f2f", calcoes: "#2b2b2b" })}</div>`;
     campo.appendChild(div);
+  });
+
+  // A treinadora (ou o treinador) está de pé junto à linha lateral.
+  $("treinador-campo").innerHTML =
+    svgAvatar(estado.treinador) + `<div class="nome-campo">${estado.treinador.genero === "F" ? "Treinadora" : "Treinador"}</div>`;
+
+  atualizarEmCampoStats();
+}
+
+// Painel ao vivo: pontos ✅ e falhas ❌ de quem está em campo.
+// Clicar numa jogadora abre logo a substituição com ela escolhida para sair.
+function atualizarEmCampoStats() {
+  const painel = $("em-campo-stats");
+  painel.innerHTML = "";
+  jogo.emCampo.forEach((id) => {
+    const j = jogadoraPorId(id);
+    const s = jogo.stats[id];
+    const falhando = s.erros >= 2 && s.erros > s.pontos;
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip-jogadora" + (falhando ? " falhando" : "");
+    chip.title = "Clica para substituir a " + j.nome.split(" ")[0];
+    chip.innerHTML =
+      `<strong>${j.numero} ${j.nome.split(" ")[0]}</strong>` +
+      `<span>✅${s.pontos} ❌${s.erros} ⚡${Math.round(j.energia)}</span>` +
+      (falhando ? `<span class="aviso-falha">a falhar!</span>` : "");
+    chip.addEventListener("click", () => abrirSubs(id));
+    painel.appendChild(chip);
   });
 }
 
@@ -1028,30 +1069,52 @@ function atualizarPlacar() {
   $("placar-set-atual").textContent = jogo.setAtual + ".º set";
 }
 
-function ratingEquipaNos() {
-  const emCampo = jogo.emCampo.map(jogadoraPorId);
-  let soma = 0, somaEquipa = 0;
-  emCampo.forEach((j) => {
-    const frescura = 0.55 + 0.45 * (j.energia / 100);
-    soma += ((j.passe + j.manchete + j.remate) / 3) * frescura;
-    somaEquipa += j.equipa;
-  });
-  const media = soma / 6;
-  const fatorEquipa = 0.8 + 0.4 * (somaEquipa / 6 / 100); // o trabalho de equipa vale até +20%
-  return media * fatorEquipa;
+function frescuraDe(j) {
+  return 0.55 + 0.45 * (j.energia / 100);
 }
 
+function skillDe(j, stat) {
+  return j[stat] * frescuraDe(j);
+}
+
+// Escolhe uma jogadora em campo, com mais probabilidade para quem tem o
+// stat mais alto. A líbero é a defesa preferida; no ataque não conta
+// (como no voleibol a sério, a líbero não remata).
 function escolherPorStat(stat, excluir = []) {
-  // Escolhe uma jogadora em campo, com mais probabilidade para quem tem o stat mais alto.
-  const candidatas = jogo.emCampo.map(jogadoraPorId).filter((j) => !excluir.includes(j.id));
-  const total = candidatas.reduce((s, j) => s + j[stat] * j[stat], 0);
+  let candidatas = jogo.emCampo.map(jogadoraPorId).filter((j) => !excluir.includes(j.id));
+  if (stat === "remate") {
+    const semLibero = candidatas.filter((j) => j.pos !== "Líbero");
+    if (semLibero.length) candidatas = semLibero;
+  }
+  const peso = (j) => {
+    let w = j[stat] * j[stat];
+    if (stat === "manchete" && j.pos === "Líbero") w *= 2;
+    if (stat === "passe" && j.pos === "Levantadora") w *= 2;
+    return w;
+  };
+  const total = candidatas.reduce((s, j) => s + peso(j), 0);
   let r = Math.random() * total;
   for (const j of candidatas) {
-    r -= j[stat] * j[stat];
+    r -= peso(j);
     if (r <= 0) return j;
   }
   return candidatas[candidatas.length - 1];
 }
+
+// Quando perdemos um ponto, a culpa cai com mais probabilidade em quem
+// está mais fraca ou mais cansada nessa fase do jogo.
+function escolherCulpada(fases) {
+  const total = fases.reduce((s, f) => s + f.peso, 0);
+  let r = Math.random() * total;
+  for (const f of fases) {
+    r -= f.peso;
+    if (r <= 0) return f;
+  }
+  return fases[fases.length - 1];
+}
+
+function registarPonto(j) { jogo.stats[j.id].pontos++; }
+function registarErro(j) { jogo.stats[j.id].erros++; }
 
 function jogarPonto() {
   if (!jogo || jogo.aAnimar || jogo.terminado) return;
@@ -1059,12 +1122,25 @@ function jogarPonto() {
   $("btn-jogar-ponto").disabled = true;
   $("btn-substituicao").disabled = true;
 
-  const nos = ratingEquipaNos();
-  const eles = forcaAdversario() * (0.92 + Math.random() * 0.16);
-  const pNos = Math.pow(nos, 1.4) / (Math.pow(nos, 1.4) + Math.pow(eles, 1.4));
+  // O resultado do ponto depende das jogadoras que tocam na bola nesta
+  // jogada — receção, passe e remate — e do trabalho de equipa.
+  const recetora = escolherPorStat("manchete");
+  const levantadora = escolherPorStat("passe", [recetora.id]);
+  const atacante = escolherPorStat("remate", [recetora.id, levantadora.id]);
+  const servidora = jogadoraPorId(jogo.emCampo[0]); // posição 1 serve
+
+  const mediaEquipa = jogo.emCampo.reduce((s, id) => s + jogadoraPorId(id).equipa, 0) / 6;
+  const fatorEquipa = 0.8 + 0.4 * (mediaEquipa / 100);
+  const score =
+    (skillDe(recetora, "manchete") * 0.35 +
+      skillDe(levantadora, "passe") * 0.2 +
+      skillDe(atacante, "remate") * 0.45) * fatorEquipa;
+  // Servir é um pouco mais difícil de ganhar do que receber (realista).
+  const eles = forcaAdversario() * (0.92 + Math.random() * 0.16) + (jogo.servimosNos ? 2.5 : 0);
+  const pNos = Math.pow(score, 1.4) / (Math.pow(score, 1.4) + Math.pow(eles, 1.4));
   const ganhamos = Math.random() < pNos;
 
-  const passos = construirNarracao(ganhamos);
+  const passos = construirNarracao(ganhamos, { recetora, levantadora, atacante, servidora });
 
   let i = 0;
   const executarPasso = () => {
@@ -1081,57 +1157,95 @@ function jogarPonto() {
   executarPasso();
 }
 
-function construirNarracao(ganhamos) {
+function construirNarracao(ganhamos, atores) {
+  const { recetora, levantadora, atacante, servidora } = atores;
   const passos = [];
   const primeiro = (j) => j.nome.split(" ")[0];
+  const eq = jogo.cidade.equipa;
 
-  const recetora = escolherPorStat("manchete");
-  const levantadora = escolherPorStat("passe", [recetora.id]);
-  const atacante = escolherPorStat("remate", [recetora.id, levantadora.id]);
+  // Pesos de "culpa": quanto mais fraca/cansada na fase, mais provável falhar.
+  const fasesRececao = [
+    { quem: recetora, fase: "rececao", peso: Math.max(8, 115 - skillDe(recetora, "manchete")) },
+    { quem: levantadora, fase: "passe", peso: Math.max(5, (110 - skillDe(levantadora, "passe")) * 0.55) },
+    { quem: atacante, fase: "remate", peso: Math.max(8, 115 - skillDe(atacante, "remate")) },
+  ];
 
   if (jogo.servimosNos) {
-    const servidora = jogadoraPorId(jogo.emCampo[jogo.servidorIdx % 6]);
-    passos.push({ texto: `${primeiro(servidora)} prepara o serviço…`, bola: { x: 80, y: 92 }, destaque: servidora.id });
-    if (ganhamos && Math.random() < 0.14) {
-      passos.push({ texto: `A bola voa por cima da rede…`, bola: { x: 50, y: 30 } });
-      passos.push({ texto: `ÁS DE SERVIÇO da ${primeiro(servidora)}! Ninguém lhe tocou! 🎯`, bola: { x: 40, y: 12 }, classe: "ponto-nos" });
-      return passos;
-    }
-    passos.push({ texto: `Serviço por cima, a bola passa a rede.`, bola: { x: 50, y: 25 } });
-    passos.push({ texto: `A ${jogo.cidade.equipa} constrói o ataque…`, bola: { x: 60, y: 38 } });
+    passos.push({ texto: `${primeiro(servidora)} atira a bola ao ar e serve…`, bola: { x: 82, y: 93 }, destaque: servidora.id });
     if (ganhamos) {
-      passos.push({ texto: `${primeiro(recetora)} defende de MANCHETE uma bola fortíssima! 💪`, bola: { x: 35, y: 80 }, destaque: recetora.id });
-      passos.push({ texto: `${primeiro(levantadora)} faz um passe perfeito…`, bola: { x: 50, y: 65 }, destaque: levantadora.id });
-      passos.push({ texto: `${primeiro(atacante)} sobe e REMATA para o chão! PONTO! 💥`, bola: { x: 65, y: 20 }, destaque: atacante.id, classe: "ponto-nos" });
-    } else {
-      if (Math.random() < 0.5) {
-        passos.push({ texto: `O remate adversário entra sem hipótese de defesa. Ponto para ${jogo.cidade.equipa}.`, bola: { x: 45, y: 78 }, classe: "ponto-eles" });
+      const v = Math.random();
+      if (v < 0.16) {
+        registarPonto(servidora);
+        passos.push({ texto: `A bola voa rasante à rede…`, bola: { x: 50, y: 32 } });
+        passos.push({ texto: `ÁS DE SERVIÇO da ${primeiro(servidora)}! Ninguém lhe tocou! 🎯`, bola: { x: 40, y: 14 }, classe: "ponto-nos" });
+      } else if (v < 0.34) {
+        passos.push({ texto: `Serviço colocado a queimar a linha…`, bola: { x: 30, y: 25 } });
+        passos.push({ texto: `A receção da ${eq} sai torta e a bola vai para fora! Ponto nosso! ✅`, bola: { x: 8, y: 6 }, classe: "ponto-nos" });
       } else {
-        passos.push({ texto: `${primeiro(recetora)} ainda toca na bola, mas ela sai fora. Ponto para elas.`, bola: { x: 12, y: 95 }, destaque: recetora.id, classe: "ponto-eles" });
+        registarPonto(atacante);
+        passos.push({ texto: `A ${eq} devolve por cima…`, bola: { x: 55, y: 35 } });
+        passos.push({ texto: `${primeiro(recetora)} segura a defesa de manchete! 💪`, bola: { x: 35, y: 78 }, destaque: recetora.id });
+        passos.push({ texto: `${primeiro(levantadora)} levanta na perfeição…`, bola: { x: 50, y: 64 }, destaque: levantadora.id });
+        passos.push({ texto: `${primeiro(atacante)} REMATA no contra-ataque — PONTO! 💥`, bola: { x: 62, y: 20 }, destaque: atacante.id, classe: "ponto-nos" });
+      }
+    } else {
+      const v = Math.random();
+      if (v < 0.2) {
+        registarErro(servidora);
+        passos.push({ texto: `…mas o serviço da ${primeiro(servidora)} fica na rede. Ponto para a ${eq}. 😬`, bola: { x: 75, y: 50 }, classe: "ponto-eles" });
+      } else if (v < 0.45) {
+        passos.push({ texto: `A ${eq} constrói o ataque com calma…`, bola: { x: 55, y: 35 } });
+        passos.push({ texto: `O remate delas entra sem hipótese. Ponto para a ${eq}.`, bola: { x: 45, y: 78 }, classe: "ponto-eles" });
+      } else {
+        const culpa = escolherCulpada(fasesRececao.slice(0, 2)); // defesa ou passe de transição
+        registarErro(culpa.quem);
+        passos.push({ texto: `A ${eq} responde com um ataque forte…`, bola: { x: 60, y: 38 } });
+        if (culpa.fase === "rececao") {
+          passos.push({ texto: `${primeiro(culpa.quem)} tenta a manchete, mas a bola foge para fora. Ponto delas.`, bola: { x: 10, y: 95 }, destaque: culpa.quem.id, classe: "ponto-eles" });
+        } else {
+          passos.push({ texto: `${primeiro(culpa.quem)} não consegue segurar o passe e a bola morre na rede. Ponto delas.`, bola: { x: 50, y: 52 }, destaque: culpa.quem.id, classe: "ponto-eles" });
+        }
       }
     }
   } else {
-    passos.push({ texto: `Serviço da ${jogo.cidade.equipa}…`, bola: { x: 20, y: 8 } });
-    if (!ganhamos && Math.random() < 0.12) {
-      passos.push({ texto: `A bola cai no nosso campo sem ninguém lhe chegar. Ás delas. 😬`, bola: { x: 60, y: 88 }, classe: "ponto-eles" });
-      return passos;
-    }
-    passos.push({ texto: `${primeiro(recetora)} recebe de manchete…`, bola: { x: 40, y: 80 }, destaque: recetora.id });
-    passos.push({ texto: `${primeiro(levantadora)} levanta para a ponta…`, bola: { x: 55, y: 63 }, destaque: levantadora.id });
+    passos.push({ texto: `Serviço da ${eq}…`, bola: { x: 18, y: 7 } });
     if (ganhamos) {
-      const variante = Math.random();
-      if (variante < 0.6) {
+      const v = Math.random();
+      passos.push({ texto: `${primeiro(recetora)} recebe de manchete, bola controlada.`, bola: { x: 40, y: 80 }, destaque: recetora.id });
+      passos.push({ texto: `${primeiro(levantadora)} levanta para a ponta…`, bola: { x: 55, y: 63 }, destaque: levantadora.id });
+      if (v < 0.55) {
+        registarPonto(atacante);
         passos.push({ texto: `${primeiro(atacante)} REMATA na diagonal — a bola explode no chão! PONTO! 💥`, bola: { x: 30, y: 18 }, destaque: atacante.id, classe: "ponto-nos" });
-      } else {
+      } else if (v < 0.8) {
+        registarPonto(atacante);
         passos.push({ texto: `${primeiro(atacante)} ataca, elas defendem…`, bola: { x: 50, y: 35 }, destaque: atacante.id });
-        passos.push({ texto: `…mas mandam a bola para fora! Ponto para nós! ✅`, bola: { x: 90, y: 5 }, classe: "ponto-nos" });
+        passos.push({ texto: `…mas a segunda bola da ${primeiro(atacante)} é imparável! Ponto! ✅`, bola: { x: 70, y: 16 }, destaque: atacante.id, classe: "ponto-nos" });
+      } else {
+        registarPonto(atacante);
+        passos.push({ texto: `${primeiro(atacante)} finge o remate e larga um amorti subtil… 🪶`, bola: { x: 45, y: 40 }, destaque: atacante.id });
+        passos.push({ texto: `A ${eq} nem se mexe! Ponto de inteligência pura!`, bola: { x: 45, y: 42 }, classe: "ponto-nos" });
       }
     } else {
-      const variante = Math.random();
-      if (variante < 0.5) {
-        passos.push({ texto: `${primeiro(atacante)} remata… BLOCO da ${jogo.cidade.equipa}. Ponto para elas.`, bola: { x: 55, y: 70 }, destaque: atacante.id, classe: "ponto-eles" });
+      const culpa = escolherCulpada(fasesRececao);
+      registarErro(culpa.quem);
+      if (culpa.fase === "rececao") {
+        const ace = Math.random() < 0.4;
+        if (ace) {
+          passos.push({ texto: `A bola cai entre a ${primeiro(culpa.quem)} e a linha — ás da ${eq}. 😬`, bola: { x: 60, y: 88 }, destaque: culpa.quem.id, classe: "ponto-eles" });
+        } else {
+          passos.push({ texto: `${primeiro(culpa.quem)} tenta a manchete…`, bola: { x: 40, y: 82 }, destaque: culpa.quem.id });
+          passos.push({ texto: `…mas a receção sai torta e a bola vai para fora. Ponto da ${eq}.`, bola: { x: 8, y: 95 }, classe: "ponto-eles" });
+        }
+      } else if (culpa.fase === "passe") {
+        passos.push({ texto: `${primeiro(recetora)} recebe…`, bola: { x: 40, y: 80 }, destaque: recetora.id });
+        passos.push({ texto: `O passe da ${primeiro(culpa.quem)} sai curto e a bola fica na rede. Ponto da ${eq}.`, bola: { x: 50, y: 52 }, destaque: culpa.quem.id, classe: "ponto-eles" });
       } else {
-        passos.push({ texto: `O passe sai curto e a bola fica na rede. Ponto para ${jogo.cidade.equipa}.`, bola: { x: 50, y: 50 }, destaque: levantadora.id, classe: "ponto-eles" });
+        passos.push({ texto: `${primeiro(recetora)} recebe, ${primeiro(levantadora)} levanta…`, bola: { x: 50, y: 65 }, destaque: levantadora.id });
+        if (Math.random() < 0.5) {
+          passos.push({ texto: `${primeiro(culpa.quem)} remata… BLOCO da ${eq}! Ponto delas.`, bola: { x: 55, y: 58 }, destaque: culpa.quem.id, classe: "ponto-eles" });
+        } else {
+          passos.push({ texto: `${primeiro(culpa.quem)} bate forte… mas a bola sai pela linha de fundo. Ponto da ${eq}.`, bola: { x: 50, y: 4 }, destaque: culpa.quem.id, classe: "ponto-eles" });
+        }
       }
     }
   }
@@ -1140,8 +1254,11 @@ function construirNarracao(ganhamos) {
 
 function terminarPonto(ganhamos) {
   if (ganhamos) {
+    if (!jogo.servimosNos) {
+      // Recuperámos o serviço: a equipa RODA uma posição, como no voleibol a sério.
+      jogo.emCampo.push(jogo.emCampo.shift());
+    }
     jogo.pontosNos++;
-    if (!jogo.servimosNos) jogo.servidorIdx++; // recuperámos o serviço: roda a servidora
     jogo.servimosNos = true;
   } else {
     jogo.pontosEles++;
@@ -1181,12 +1298,33 @@ function terminarPonto(ganhamos) {
     jogo.pontosEles = 0;
     comentar(`— Começa o ${jogo.setAtual}.º set (até ${jogo.setAtual === 3 ? 15 : 25} pontos) —`, "info-set");
     atualizarPlacar();
+  } else {
+    // Momentos de tensão, como num jogo a sério.
+    if (jogo.pontosNos === alvo - 1 && jogo.pontosNos - jogo.pontosEles >= 1) {
+      comentar(`🔥 ${jogo.pontosNos}–${jogo.pontosEles}: PONTO DE SET para nós!`, "info-set");
+    } else if (jogo.pontosEles === alvo - 1 && jogo.pontosEles - jogo.pontosNos >= 1) {
+      comentar(`⚠️ ${jogo.pontosNos}–${jogo.pontosEles}: ponto de set para a ${jogo.cidade.equipa}…`, "info-set");
+    } else if (jogo.pontosNos === jogo.pontosEles && jogo.pontosNos >= alvo - 1) {
+      comentar(`😮 Empate a ${jogo.pontosNos} — agora é ponto a ponto até haver 2 de diferença!`, "info-set");
+    } else if ((jogo.pontosNos + jogo.pontosEles) % 6 === 0) {
+      comentar(`Marcador: ${jogo.pontosNos}–${jogo.pontosEles}.`, "info-set");
+    }
   }
 
-  // Aviso de cansaço para lembrar as substituições.
-  const mediaEnergia = jogo.emCampo.reduce((s, id) => s + jogadoraPorId(id).energia, 0) / 6;
-  if (mediaEnergia < 40 && Math.random() < 0.25) {
-    comentar("📣 As tuas jogadoras parecem cansadas… talvez seja altura de uma substituição!", "info-set");
+  desenharCampo(); // atualiza rotação, energia e estatísticas em campo
+
+  // Avisos da bancada: cansaço e jogadoras a falhar muito.
+  const aFalhar = jogo.emCampo
+    .map(jogadoraPorId)
+    .filter((j) => jogo.stats[j.id].erros >= 3 && jogo.stats[j.id].erros > jogo.stats[j.id].pontos);
+  if (aFalhar.length && Math.random() < 0.35) {
+    const j = aFalhar[0];
+    comentar(`📣 A ${j.nome.split(" ")[0]} já falhou ${jogo.stats[j.id].erros} bolas — clica nela em baixo para a trocares por uma suplente melhor!`, "info-set");
+  } else {
+    const mediaEnergia = jogo.emCampo.reduce((s, id) => s + jogadoraPorId(id).energia, 0) / 6;
+    if (mediaEnergia < 40 && Math.random() < 0.25) {
+      comentar("📣 As tuas jogadoras parecem cansadas… talvez seja altura de uma substituição!", "info-set");
+    }
   }
 
   jogo.aAnimar = false;
@@ -1209,7 +1347,7 @@ function terminarJogo() {
 
 /* ============================ SUBSTITUIÇÕES ============================ */
 
-function abrirSubs() {
+function abrirSubs(preSai = null) {
   if (!jogo || jogo.aAnimar || jogo.terminado) return;
   subEscolha = { sai: null, entra: null };
   const desenhaLista = (elId, ids, chave) => {
@@ -1217,16 +1355,21 @@ function abrirSubs() {
     el.innerHTML = "";
     ids.forEach((id) => {
       const j = jogadoraPorId(id);
+      const s = jogo.stats[id];
       const div = document.createElement("div");
       div.className = "sub-item";
+      const desempenho = chave === "sai"
+        ? ` · ✅${s.pontos} ❌${s.erros}`
+        : ` · Remate ${Math.round(j.remate)} · Manchete ${Math.round(j.manchete)}`;
       div.innerHTML = `<strong>${j.numero}. ${j.nome}</strong> — ${j.pos}<br>
-        <span class="energia-txt">⚡ Energia: ${Math.round(j.energia)}</span>`;
+        <span class="energia-txt">⚡ Energia: ${Math.round(j.energia)}${desempenho}</span>`;
       div.addEventListener("click", () => {
         subEscolha[chave] = id;
-        el.querySelectorAll(".sub-item").forEach((s) => s.classList.remove("escolhida"));
+        el.querySelectorAll(".sub-item").forEach((x) => x.classList.remove("escolhida"));
         div.classList.add("escolhida");
         $("btn-confirmar-sub").disabled = !(subEscolha.sai !== null && subEscolha.entra !== null);
       });
+      if (chave === "sai" && id === preSai) div.click();
       el.appendChild(div);
     });
   };
@@ -1348,7 +1491,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("btn-auto-jogar").textContent = jogo.auto ? "Pausa ⏸" : "Auto ⏩";
     if (jogo.auto && !jogo.aAnimar) jogarPonto();
   });
-  $("btn-substituicao").addEventListener("click", abrirSubs);
+  $("btn-substituicao").addEventListener("click", () => abrirSubs());
   $("btn-confirmar-sub").addEventListener("click", confirmarSub);
   $("btn-fechar-subs").addEventListener("click", fecharSubs);
   $("btn-resultado-continuar").addEventListener("click", irParaHub);

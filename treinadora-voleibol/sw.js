@@ -1,7 +1,7 @@
 /* Service worker da Treinadora de Voleibol
    Estratégia: rede primeiro (atualizações aparecem logo), cache como
    reserva (continua a funcionar totalmente offline). */
-const CACHE = "treinadora-voleibol-v1";
+const CACHE = "treinadora-voleibol-v2";
 const ASSETS = [
   "./",
   "./index.html",
