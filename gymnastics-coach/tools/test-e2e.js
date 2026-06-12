@@ -45,12 +45,23 @@ const { chromium } = require('playwright');
         const moves = await page.$$('.move-item:not(.locked)');
         await moves[(i + week) % moves.length].click();
         await page.waitForTimeout(600);
-        await page.click('#btn-to-rate');
+        // demonstra o movimento arrastando o "dedo" ao longo do caminho
+        await page.evaluate(() => document.getElementById('cv-training').scrollIntoView());
         await page.waitForTimeout(200);
-        await page.click('#star-row span:nth-child(3)');
-        await page.waitForTimeout(600);
-        await page.click('#fix-options button:nth-child(1)');
-        await page.waitForTimeout(300);
+        const data = await page.evaluate(() => {
+          const cv = document.getElementById('cv-training');
+          const r = cv.getBoundingClientRect();
+          return {
+            left: r.left, top: r.top, sx: r.width / cv.width, sy: r.height / cv.height,
+            pts: window.__trace.pts.map(p => [p.x, p.y]),
+          };
+        });
+        const path = data.pts.map(([x, y]) => [data.left + x * data.sx, data.top + y * data.sy]);
+        await page.mouse.move(path[0][0], path[0][1]);
+        await page.mouse.down();
+        for (const [x, y] of path) await page.mouse.move(x, y, { steps: 3 });
+        await page.mouse.up();
+        await page.waitForSelector('#tr-result:not(.hidden)', { timeout: 10000 });
         await page.click('#btn-tr-done');
         await page.waitForTimeout(300);
       } else {
