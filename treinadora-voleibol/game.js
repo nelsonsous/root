@@ -61,36 +61,107 @@ const ROUPA_CORES = [
   { id: "vermelho", nome: "Vermelho",       cor: "#8d2f2f" },
 ];
 
-// As 16 jogadoras: raparigas da secundária (15 a 17 anos).
+// As 16 jogadoras do clube Verde-Branco-Preto.
 const PLANTEL_BASE = [
-  { nome: "Matilde Sousa",     pos: "Levantadora", idade: 16 },
-  { nome: "Leonor Almeida",    pos: "Levantadora", idade: 15 },
-  { nome: "Beatriz Costa",     pos: "Oposta",      idade: 17 },
-  { nome: "Carolina Martins",  pos: "Oposta",      idade: 16 },
-  { nome: "Mariana Silva",     pos: "Central",     idade: 16 },
-  { nome: "Inês Ferreira",     pos: "Central",     idade: 17 },
-  { nome: "Francisca Lopes",   pos: "Central",     idade: 15 },
-  { nome: "Sofia Rodrigues",   pos: "Central",     idade: 16 },
-  { nome: "Margarida Santos",  pos: "Ponta",       idade: 17 },
-  { nome: "Joana Pereira",     pos: "Ponta",       idade: 16 },
-  { nome: "Lara Gomes",        pos: "Ponta",       idade: 15 },
-  { nome: "Camila Fernandes",  pos: "Ponta",       idade: 16 },
-  { nome: "Diana Marques",     pos: "Ponta",       idade: 17 },
-  { nome: "Rita Oliveira",     pos: "Ponta",       idade: 15 },
-  { nome: "Marta Gonçalves",   pos: "Líbero",      idade: 16 },
-  { nome: "Catarina Alves",    pos: "Líbero",      idade: 17 },
+  { nome: "Matilde Sousa",     pos: "Levantadora" },
+  { nome: "Leonor Almeida",    pos: "Levantadora" },
+  { nome: "Beatriz Costa",     pos: "Oposta" },
+  { nome: "Carolina Martins",  pos: "Oposta" },
+  { nome: "Mariana Silva",     pos: "Central" },
+  { nome: "Inês Ferreira",     pos: "Central" },
+  { nome: "Francisca Lopes",   pos: "Central" },
+  { nome: "Sofia Rodrigues",   pos: "Central" },
+  { nome: "Margarida Santos",  pos: "Ponta" },
+  { nome: "Joana Pereira",     pos: "Ponta" },
+  { nome: "Lara Gomes",        pos: "Ponta" },
+  { nome: "Camila Fernandes",  pos: "Ponta" },
+  { nome: "Diana Marques",     pos: "Ponta" },
+  { nome: "Rita Oliveira",     pos: "Ponta" },
+  { nome: "Marta Gonçalves",   pos: "Líbero" },
+  { nome: "Catarina Alves",    pos: "Líbero" },
 ];
 
-// A digressão: 8 cidades de Portugal, da mais fácil à grande final.
-const CIDADES = [
-  { nome: "Aveiro",    equipa: "Estudantes da Ria",        pavilhao: "Pavilhão da Ria",          forca: 33 },
-  { nome: "Coimbra",   equipa: "Académica Jovem",          pavilhao: "Pavilhão do Mondego",      forca: 40 },
-  { nome: "Évora",     equipa: "Juventude Alentejana",     pavilhao: "Pavilhão das Muralhas",    forca: 46 },
-  { nome: "Faro",      equipa: "Ondas do Algarve",         pavilhao: "Pavilhão do Sul",          forca: 52 },
-  { nome: "Braga",     equipa: "Minho Vólei Clube",        pavilhao: "Pavilhão do Sameiro",      forca: 58 },
-  { nome: "Guimarães", equipa: "Berço Vólei Juvenil",      pavilhao: "Pavilhão do Castelo",      forca: 64 },
-  { nome: "Porto",     equipa: "Invicta Vólei Escolar",    pavilhao: "Pavilhão da Invicta",      forca: 70 },
-  { nome: "Lisboa",    equipa: "Atlético Escolar de Lisboa", pavilhao: "Pavilhão da Capital",    forca: 76 },
+// A carreira: as jogadoras começam nos Minis e sobem de escalão a cada
+// época ganha, até chegarem a Seniores e aos jogos internacionais.
+const ESCALOES = [
+  { nome: "Mini A",    nivel: "Escolas",       idadeBase: 8 },
+  { nome: "Mini B",    nivel: "Escolas",       idadeBase: 10 },
+  { nome: "Infantis",  nivel: "Cidade",        idadeBase: 12 },
+  { nome: "Iniciadas", nivel: "Cidade",        idadeBase: 14 },
+  { nome: "Juvenis",   nivel: "Regional",      idadeBase: 16 },
+  { nome: "Juniores",  nivel: "Nacional",      idadeBase: 18 },
+  { nome: "Seniores",  nivel: "Internacional", idadeBase: 20 },
+];
+
+// 8 adversários por nível de competição, do mais fácil ao mais difícil.
+const ADVERSARIOS = {
+  Escolas: [
+    { nome: "Escola do Parque",      equipa: "Esquilos do Parque",       pavilhao: "Ginásio da Escola do Parque" },
+    { nome: "Escola da Bela Vista",  equipa: "Gaivotas da Bela Vista",   pavilhao: "Ginásio da Bela Vista" },
+    { nome: "Colégio do Mar",        equipa: "Golfinhos do Mar",         pavilhao: "Ginásio do Colégio do Mar" },
+    { nome: "Escola dos Plátanos",   equipa: "Andorinhas dos Plátanos",  pavilhao: "Ginásio dos Plátanos" },
+    { nome: "Escola da Ribeira",     equipa: "Estrelas da Ribeira",      pavilhao: "Ginásio da Ribeira" },
+    { nome: "Colégio do Monte",      equipa: "Águias do Monte",          pavilhao: "Ginásio do Monte" },
+    { nome: "Escola das Laranjeiras",equipa: "Abelhas das Laranjeiras",  pavilhao: "Ginásio das Laranjeiras" },
+    { nome: "Escola Grande",         equipa: "Leoas da Escola Grande",   pavilhao: "Pavilhão da Escola Grande" },
+  ],
+  Cidade: [
+    { nome: "Ovar",       equipa: "Ovarense Jovem",        pavilhao: "Pavilhão de Ovar" },
+    { nome: "Esmoriz",    equipa: "Esmoriz Vólei",         pavilhao: "Pavilhão de Esmoriz" },
+    { nome: "Espinho",    equipa: "Académico de Espinho",  pavilhao: "Pavilhão de Espinho" },
+    { nome: "Ílhavo",     equipa: "Ilhavense Vólei",       pavilhao: "Pavilhão de Ílhavo" },
+    { nome: "Águeda",     equipa: "Galitos de Águeda",     pavilhao: "Pavilhão de Águeda" },
+    { nome: "Anadia",     equipa: "Vinhas de Anadia",      pavilhao: "Pavilhão de Anadia" },
+    { nome: "Gaia",       equipa: "Gaia Vólei Clube",      pavilhao: "Pavilhão de Gaia" },
+    { nome: "Matosinhos", equipa: "Ondas de Matosinhos",   pavilhao: "Pavilhão de Matosinhos" },
+  ],
+  Regional: [
+    { nome: "Aveiro",         equipa: "Estudantes da Ria",      pavilhao: "Pavilhão da Ria" },
+    { nome: "Coimbra",        equipa: "Académica Jovem",        pavilhao: "Pavilhão do Mondego" },
+    { nome: "Leiria",         equipa: "Pinhal Vólei Leiria",    pavilhao: "Pavilhão do Pinhal" },
+    { nome: "Viseu",          equipa: "Viriatas de Viseu",      pavilhao: "Pavilhão de Viseu" },
+    { nome: "Santarém",       equipa: "Ribatejanas",            pavilhao: "Pavilhão do Ribatejo" },
+    { nome: "Castelo Branco", equipa: "Albicastrenses",         pavilhao: "Pavilhão da Beira" },
+    { nome: "Évora",          equipa: "Juventude Alentejana",   pavilhao: "Pavilhão das Muralhas" },
+    { nome: "Beja",           equipa: "Planícies de Beja",      pavilhao: "Pavilhão das Planícies" },
+  ],
+  Nacional: [
+    { nome: "Setúbal",       equipa: "Sadinas de Setúbal",        pavilhao: "Pavilhão do Sado" },
+    { nome: "Faro",          equipa: "Ondas do Algarve",          pavilhao: "Pavilhão do Sul" },
+    { nome: "Braga",         equipa: "Minho Vólei Clube",         pavilhao: "Pavilhão do Sameiro" },
+    { nome: "Guimarães",     equipa: "Berço Vólei Juvenil",       pavilhao: "Pavilhão do Castelo" },
+    { nome: "Funchal",       equipa: "Madeira Vólei",             pavilhao: "Pavilhão do Funchal" },
+    { nome: "Ponta Delgada", equipa: "Açores Vólei Clube",        pavilhao: "Pavilhão do Atlântico" },
+    { nome: "Porto",         equipa: "Invicta Vólei Escolar",     pavilhao: "Pavilhão da Invicta" },
+    { nome: "Lisboa",        equipa: "Atlético Escolar de Lisboa",pavilhao: "Pavilhão da Capital" },
+  ],
+  Internacional: [
+    { nome: "Madrid",         equipa: "Madrid Voleibol Club",   pavilhao: "Arena de Madrid" },
+    { nome: "Paris",          equipa: "Paris Volley Féminin",   pavilhao: "Arena de Paris" },
+    { nome: "Roma",           equipa: "Roma Pallavolo",         pavilhao: "Arena de Roma" },
+    { nome: "Londres",        equipa: "London Lionesses",       pavilhao: "Arena de Londres" },
+    { nome: "Berlim",         equipa: "Berlin Volley Damen",    pavilhao: "Arena de Berlim" },
+    { nome: "Amesterdão",     equipa: "Amsterdam Volleybal",    pavilhao: "Arena de Amesterdão" },
+    { nome: "Rio de Janeiro", equipa: "Rio Vôlei Clube",        pavilhao: "Arena do Rio" },
+    { nome: "Tóquio",         equipa: "Tokyo Sakura Volley",    pavilhao: "Arena de Tóquio" },
+  ],
+};
+
+// Força do adversário em cada jornada (1.ª à 8.ª) — sobe a cada época.
+const FORCAS_BASE = [33, 40, 46, 52, 58, 64, 70, 76];
+
+// Cores disponíveis para o equipamento de jogo.
+const CORES_KIT = [
+  { id: "verde",    nome: "Verde do clube", cor: "#1b7a43" },
+  { id: "branco",   nome: "Branco",         cor: "#f3f4f3" },
+  { id: "preto",    nome: "Preto",          cor: "#15181a" },
+  { id: "azul",     nome: "Azul",           cor: "#27548f" },
+  { id: "vermelho", nome: "Vermelho",       cor: "#b03434" },
+  { id: "roxo",     nome: "Roxo",           cor: "#6d3fa3" },
+  { id: "rosa",     nome: "Rosa",           cor: "#d05a8c" },
+  { id: "laranja",  nome: "Laranja",        cor: "#d97b2a" },
+  { id: "amarelo",  nome: "Amarelo",        cor: "#d4b51e" },
+  { id: "azulclaro",nome: "Azul-claro",     cor: "#3aa0c9" },
 ];
 
 const EXERCICIOS = [
@@ -151,7 +222,9 @@ function novaJogadora(base, indice) {
     numero: indice + 1,
     nome: base.nome,
     pos: base.pos,
-    idade: base.idade,
+    idadeExtra: aleatorio(0, 2),                    // somada à idade do escalão
+    pele: PELES[aleatorio(0, PELES.length - 1)].id, // cada rapariga é diferente
+    cabelo: CABELO_CORES[aleatorio(0, CABELO_CORES.length - 1)].id,
     passe: aleatorio(p.passe[0], p.passe[1]),
     manchete: aleatorio(p.manchete[0], p.manchete[1]),
     remate: aleatorio(p.remate[0], p.remate[1]),
@@ -173,14 +246,54 @@ function novoEstado() {
       roupaCor: "verde",
     },
     jogadoras: PLANTEL_BASE.map(novaJogadora),
+    clube: { camisola: "#1b7a43", calcoes: "#15181a" },
     dia: 1,            // 1..5 — depois do 5.º dia é dia de jogo
     sessao: 1,         // 1..SESSOES_POR_DIA
     cidadeIdx: 0,
-    epoca: 1,
-    medalhas: [],      // { cidade, epoca }
+    epoca: 1,          // a época define o escalão (Mini A → … → Seniores)
+    medalhas: [],      // { cidade, epoca, escalao }
     vitorias: 0,
     derrotas: 0,
   };
+}
+
+// Completa gravações antigas com os campos novos.
+function migrar(e) {
+  if (!e.clube) e.clube = { camisola: "#1b7a43", calcoes: "#15181a" };
+  e.jogadoras.forEach((j) => {
+    if (j.idadeExtra === undefined) j.idadeExtra = j.idade ? Math.max(0, Math.min(2, j.idade - 15)) : aleatorio(0, 2);
+    if (!j.pele) j.pele = PELES[aleatorio(0, PELES.length - 1)].id;
+    if (!j.cabelo) j.cabelo = CABELO_CORES[aleatorio(0, CABELO_CORES.length - 1)].id;
+  });
+  e.medalhas.forEach((m) => {
+    if (!m.escalao) m.escalao = ESCALOES[Math.min(m.epoca - 1, ESCALOES.length - 1)].nome;
+  });
+  return e;
+}
+
+function escalaoAtual() {
+  return ESCALOES[Math.min(estado.epoca - 1, ESCALOES.length - 1)];
+}
+
+function idadeDe(j) {
+  return escalaoAtual().idadeBase + j.idadeExtra;
+}
+
+// Texto preto ou branco, consoante a cor de fundo.
+function corTexto(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#15181a" : "#ffffff";
+}
+
+// Aplica as cores do equipamento ao campo (variáveis CSS).
+function aplicarCoresKit() {
+  const raiz = document.documentElement.style;
+  raiz.setProperty("--kit-camisola", estado.clube.camisola);
+  raiz.setProperty("--kit-calcoes", estado.clube.calcoes);
+  raiz.setProperty("--kit-texto-camisola", corTexto(estado.clube.camisola));
+  raiz.setProperty("--kit-texto-calcoes", corTexto(estado.clube.calcoes));
 }
 
 function guardar() {
@@ -192,7 +305,7 @@ function guardar() {
 function carregar() {
   try {
     const bruto = localStorage.getItem(CHAVE_SAVE);
-    return bruto ? JSON.parse(bruto) : null;
+    return bruto ? migrar(JSON.parse(bruto)) : null;
   } catch (e) {
     return null;
   }
@@ -299,6 +412,46 @@ function svgAvatar(t) {
   </svg>`;
 }
 
+// Avatar de uma jogadora: cabelo sempre apanhado (coque) e joelheiras
+// postas — regras do clube para ninguém se magoar!
+function svgJogadora(j) {
+  const pele = corDe(PELES, j.pele);
+  const cabelo = corDe(CABELO_CORES, j.cabelo);
+  // A líbero usa o equipamento com as cores trocadas, como no voleibol a sério.
+  const libero = j.pos === "Líbero";
+  const camisola = libero ? estado.clube.calcoes : estado.clube.camisola;
+  const calcoes = libero ? estado.clube.camisola : estado.clube.calcoes;
+  const textoCamisola = corTexto(camisola);
+  return `
+  <svg viewBox="0 0 80 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${j.nome}">
+    <!-- coque (cabelo apanhado) -->
+    <circle cx="40" cy="10" r="8" fill="${cabelo}"/>
+    <path d="M24 26 Q24 12 40 12 Q56 12 56 26 Q49 19 40 19 Q31 19 24 26 Z" fill="${cabelo}"/>
+    <!-- cabeça -->
+    <circle cx="40" cy="27" r="14" fill="${pele}"/>
+    <circle cx="35" cy="26" r="1.8" fill="#15181a"/>
+    <circle cx="45" cy="26" r="1.8" fill="#15181a"/>
+    <path d="M36 33 Q40 36 44 33" stroke="#7a3b30" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- braços -->
+    <rect x="14" y="46" width="8" height="26" rx="4" fill="${pele}"/>
+    <rect x="58" y="46" width="8" height="26" rx="4" fill="${pele}"/>
+    <!-- camisola com o número -->
+    <path d="M20 44 Q40 38 60 44 L60 78 L20 78 Z" fill="${camisola}" stroke="#00000022"/>
+    <text x="40" y="68" text-anchor="middle" font-size="18" font-weight="800" fill="${textoCamisola}">${j.numero}</text>
+    <!-- calções -->
+    <rect x="22" y="78" width="36" height="16" rx="4" fill="${calcoes}" stroke="#00000022"/>
+    <!-- pernas -->
+    <rect x="26" y="94" width="10" height="26" rx="4" fill="${pele}"/>
+    <rect x="44" y="94" width="10" height="26" rx="4" fill="${pele}"/>
+    <!-- JOELHEIRAS de proteção -->
+    <rect x="24.5" y="101" width="13" height="9" rx="4" fill="#ffffff" stroke="#b9bdb9"/>
+    <rect x="42.5" y="101" width="13" height="9" rx="4" fill="#ffffff" stroke="#b9bdb9"/>
+    <!-- sapatilhas -->
+    <rect x="23" y="119" width="15" height="7" rx="3" fill="#2c3236"/>
+    <rect x="42" y="119" width="15" height="7" rx="3" fill="#2c3236"/>
+  </svg>`;
+}
+
 function svgMedalha(cidade) {
   return `
   <svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Medalha de ${cidade}">
@@ -387,20 +540,27 @@ function tituloTreinador() {
   return f ? "Treinadora estreante" : "Treinador estreante";
 }
 
+function adversariosAtuais() {
+  return ADVERSARIOS[escalaoAtual().nivel];
+}
+
 function cidadeAtual() {
-  return CIDADES[estado.cidadeIdx % CIDADES.length];
+  return adversariosAtuais()[estado.cidadeIdx % 8];
 }
 
 function forcaAdversario() {
-  return cidadeAtual().forca + (estado.epoca - 1) * 8;
+  return FORCAS_BASE[estado.cidadeIdx % 8] + (estado.epoca - 1) * 7;
 }
 
 function irParaHub() {
   guardar();
+  aplicarCoresKit();
   const t = estado.treinador;
+  const esc = escalaoAtual();
   $("hub-avatar").innerHTML = svgAvatar(t);
   $("hub-nome").textContent = t.nome || (t.genero === "F" ? "Treinadora" : "Treinador");
-  $("hub-titulo").textContent = tituloTreinador() + " · Época " + estado.epoca;
+  $("hub-titulo").textContent =
+    `${tituloTreinador()} · Época ${estado.epoca} · Escalão ${esc.nome} · Nível ${esc.nivel}`;
   $("hub-medalhas-resumo").textContent = "🏅 × " + estado.medalhas.length;
 
   // Semana de treinos
@@ -430,10 +590,10 @@ function irParaHub() {
     btn.onclick = abrirTreino;
   }
 
-  // Cidades
+  // Adversários do nível atual (escolas, cidades ou arenas internacionais)
   const ul = $("hub-cidades");
   ul.innerHTML = "";
-  CIDADES.forEach((c, i) => {
+  adversariosAtuais().forEach((c, i) => {
     const li = document.createElement("li");
     const ganha = estado.medalhas.some((m) => m.cidade === c.nome && m.epoca === estado.epoca);
     if (ganha) li.classList.add("ganha");
@@ -451,7 +611,7 @@ function irParaHub() {
     estado.medalhas.forEach((m) => {
       const div = document.createElement("div");
       div.className = "medalha-mini";
-      div.innerHTML = svgMedalha(m.cidade) + `<span>${m.cidade}<br>Época ${m.epoca}</span>`;
+      div.innerHTML = svgMedalha(m.cidade) + `<span>${m.cidade}<br>${m.escalao}</span>`;
       vit.appendChild(div);
     });
   }
@@ -492,9 +652,16 @@ function cartaoJogadora(j, opcoes = {}) {
       <span>${Math.round(valor)}</span>
     </div>`;
   div.innerHTML = `
-    <span class="numero">${j.numero}</span>
-    <h4>${j.nome}</h4>
-    <p class="posicao">${j.pos} · ${j.idade} anos</p>
+    <div class="cartao-cabeca">
+      <div class="mini-jogadora">${svgJogadora(j)}</div>
+      <div>
+        <h4>${j.nome}</h4>
+        <p class="posicao">${j.pos} · ${idadeDe(j)} anos</p>
+        ${opcoes.editavel
+          ? `<label class="numero-edit">N.º <input type="number" min="1" max="99" value="${j.numero}" data-id="${j.id}"></label>`
+          : `<p class="posicao">N.º ${j.numero}</p>`}
+      </div>
+    </div>
     ${barra("Passe", j.passe)}
     ${barra("Manchete", j.manchete)}
     ${barra("Remate", j.remate)}
@@ -505,13 +672,56 @@ function cartaoJogadora(j, opcoes = {}) {
     div.classList.add("selecionavel");
     div.addEventListener("click", () => opcoes.aoClicar(j, div));
   }
+  if (opcoes.editavel) {
+    const input = div.querySelector("input");
+    input.addEventListener("click", (ev) => ev.stopPropagation());
+    input.addEventListener("change", () => {
+      let novo = Math.max(1, Math.min(99, Math.round(Number(input.value) || j.numero)));
+      // Se outra jogadora já tem esse número, trocam de número entre si.
+      const outra = estado.jogadoras.find((o) => o.numero === novo && o.id !== j.id);
+      if (outra) outra.numero = j.numero;
+      j.numero = novo;
+      guardar();
+      abrirPlantel();
+    });
+  }
   return div;
 }
 
 function abrirPlantel() {
+  aplicarCoresKit();
+  const esc = escalaoAtual();
+  $("plantel-descricao").textContent =
+    `Escalão ${esc.nome} (nível ${esc.nivel}). Todas jogam de joelheiras e com o cabelo apanhado — ` +
+    `regras do clube, para ninguém se magoar. Podes mudar o número de cada jogadora e as cores do equipamento.`;
+
+  // Cores do equipamento
+  const pintar = (elId, chave) => {
+    const el = $(elId);
+    el.innerHTML = "";
+    CORES_KIT.forEach((c) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "opcao opcao-cor";
+      b.style.background = c.cor;
+      b.title = c.nome;
+      if (estado.clube[chave] === c.cor) b.classList.add("escolhida");
+      b.addEventListener("click", () => {
+        if (estado.clube.camisola === c.cor && chave === "calcoes") return; // iguais não dá
+        if (estado.clube.calcoes === c.cor && chave === "camisola") return;
+        estado.clube[chave] = c.cor;
+        guardar();
+        abrirPlantel();
+      });
+      el.appendChild(b);
+    });
+  };
+  pintar("op-kit-camisola", "camisola");
+  pintar("op-kit-calcoes", "calcoes");
+
   const lista = $("plantel-lista");
   lista.innerHTML = "";
-  estado.jogadoras.forEach((j) => lista.appendChild(cartaoJogadora(j)));
+  estado.jogadoras.forEach((j) => lista.appendChild(cartaoJogadora(j, { editavel: true })));
   mostrarEcra("ecra-plantel");
 }
 
@@ -522,8 +732,8 @@ function abrirTreino() {
     `Treino — ${DIAS_SEMANA[estado.dia - 1]}, ${estado.sessao}.ª sessão de ${SESSOES_POR_DIA}`;
   const cid = cidadeAtual();
   $("treino-descricao").textContent =
-    `Faltam ${5 - estado.dia} dia(s) de treino para o jogo em ${cid.nome}. ` +
-    `As 16 jogadoras estão no pavilhão, de equipamento verde, branco e preto, à tua espera.`;
+    `Escalão ${escalaoAtual().nome} · Faltam ${5 - estado.dia} dia(s) de treino para o jogo: ${cid.equipa} (${cid.nome}). ` +
+    `As 16 jogadoras estão no pavilhão, de joelheiras e cabelo apanhado, à tua espera.`;
 
   const grelha = $("treino-exercicios");
   grelha.innerHTML = "";
@@ -675,7 +885,8 @@ function abrirPreJogo() {
   escolhaTitulares = new Set();
   $("prejogo-titulo").textContent = `Dia de jogo em ${cid.nome}!`;
   $("prejogo-descricao").textContent =
-    `O autocarro chegou ao ${cid.pavilhao}. Do outro lado da rede: ${cid.equipa}. ` +
+    `O autocarro chegou ao ${cid.pavilhao}. Do outro lado da rede: ${cid.equipa} (nível ${escalaoAtual().nivel}). ` +
+    `Joelheiras postas e cabelos apanhados ✅ — ninguém se magoa! ` +
     `Escolhe as 6 titulares — joga-se à melhor de 3 sets, até aos 25 pontos.`;
 
   const lista = $("prejogo-lista");
@@ -755,7 +966,7 @@ function comecarJogo() {
   $("placar-nome-eles").textContent = cid.equipa;
   $("placar-cidade").textContent = `${cid.nome} · ${cid.pavilhao}`;
   $("comentarios").innerHTML = "";
-  comentar(`🏟️ Bem-vindos ao ${cid.pavilhao}, em ${cid.nome}! A equipa entra de verde, branco e preto.`, "info-set");
+  comentar(`🏟️ Bem-vindos ao ${cid.pavilhao} (${cid.nome})! A equipa entra a rigor: joelheiras postas e cabelo apanhado.`, "info-set");
   comentar(`O jogo é à melhor de 3 sets. ${jogo.servimosNos ? "Nós" : "Elas"} servem primeiro. Boa sorte, ${estado.treinador.nome}!`, "info-set");
   atualizarPlacar();
   desenharCampo();
@@ -1062,8 +1273,8 @@ function mostrarResultado(vitoria) {
 
   if (vitoria) {
     estado.vitorias++;
-    estado.medalhas.push({ cidade: cid.nome, epoca: estado.epoca });
-    $("resultado-jogo-titulo").textContent = `🎉 Vitória em ${cid.nome}!`;
+    estado.medalhas.push({ cidade: cid.nome, epoca: estado.epoca, escalao: escalaoAtual().nome });
+    $("resultado-jogo-titulo").textContent = `🎉 Vitória contra ${cid.equipa}!`;
     $("resultado-jogo-texto").textContent =
       `Final: ${jogo.setsNos}–${jogo.setsEles} em sets contra ${cid.equipa}. ` +
       `No fim do jogo, as 16 jogadoras juntam-se à tua volta, aos saltos… e a capitã pendura-te uma medalha ao pescoço!`;
@@ -1074,21 +1285,30 @@ function mostrarResultado(vitoria) {
     $("medalha-cerimonia").classList.remove("escondido");
 
     estado.cidadeIdx++;
-    if (estado.cidadeIdx >= CIDADES.length) {
-      // Época completa: campeãs nacionais!
-      $("resultado-jogo-titulo").textContent = `🏆 CAMPEÃS DE PORTUGAL! 🏆`;
-      $("resultado-jogo-texto").textContent =
-        `Ganhaste em todas as cidades da época ${estado.epoca}! As tuas jogadoras erguem a taça em ${cid.nome} ` +
-        `e gritam o teu nome. Para a próxima época, as adversárias vêm mais fortes… mas a tua equipa também!`;
+    if (estado.cidadeIdx >= 8) {
+      // Época completa: título ganho e subida de escalão!
+      const esc = escalaoAtual();
+      const proximo = ESCALOES[Math.min(estado.epoca, ESCALOES.length - 1)];
+      $("resultado-jogo-titulo").textContent = `🏆 CAMPEÃS DO NÍVEL ${esc.nivel.toUpperCase()}! 🏆`;
+      if (esc.nome === "Seniores") {
+        $("resultado-jogo-texto").textContent =
+          `As tuas Seniores ganharam o título internacional em ${cid.nome}! São as melhores do mundo — ` +
+          `e gritam o teu nome ao erguer a taça. A próxima época internacional vem ainda mais forte!`;
+      } else {
+        $("resultado-jogo-texto").textContent =
+          `Ganhaste todos os jogos do escalão ${esc.nome}! As tuas jogadoras erguem a taça em ${cid.nome} e ` +
+          `gritam o teu nome. Na próxima época sobem ao escalão ${proximo.nome} (nível ${proximo.nivel}) — ` +
+          `mais crescidas e prontas para adversárias mais fortes!`;
+      }
       estado.epoca++;
       estado.cidadeIdx = 0;
     }
   } else {
     estado.derrotas++;
-    $("resultado-jogo-titulo").textContent = `Derrota em ${cid.nome}…`;
+    $("resultado-jogo-titulo").textContent = `Derrota contra ${cid.equipa}…`;
     $("resultado-jogo-texto").textContent =
       `Final: ${jogo.setsNos}–${jogo.setsEles} contra ${cid.equipa}. As jogadoras estão de cabeça baixa, mas tu sabes o que dizer: ` +
-      `"Para a semana treinamos mais passe, mais manchete, mais remate — e voltamos cá para ganhar!" Nova semana de treinos, novo jogo em ${cid.nome}.`;
+      `"Para a semana treinamos mais passe, mais manchete, mais remate — e voltamos para ganhar!" Nova semana de treinos, novo jogo contra ${cid.equipa}.`;
   }
 
   // Nova semana de treinos.

@@ -5,7 +5,9 @@ name: Publicar Treinadora de Voleibol no GitHub Pages
 
 on:
   push:
-    branches: [claude/volleyball-coaching-game-3rdoac]
+    branches:
+      - claude/volleyball-coaching-game-3rdoac
+      - claude/apple-watch-padel-app-jcgJO
     paths: ["treinadora-voleibol/**"]
   workflow_dispatch:
 
