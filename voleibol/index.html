@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Treinadora de Voleibol — Liga das Escolas</title>
+  <meta name="theme-color" content="#0e4d2a">
+  <meta name="description" content="Sê treinador ou treinadora de uma equipa de voleibol: treina 16 jogadoras e ganha medalhas de Mini A até Seniores!">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,10 +21,12 @@
       <p class="subtitulo">Liga das Escolas Secundárias de Portugal</p>
       <p class="descricao">
         És a pessoa que treina a equipa <strong>Verde-Branco-Preto</strong>:
-        16 raparigas da secundária que sonham ser campeãs.
-        Ensina-lhes o passe, a manchete, o remate e o trabalho em equipa.
-        Depois de 5 dias de treino, há jogo numa cidade de Portugal —
-        e cada vitória vale uma medalha para ti!
+        16 raparigas que sonham ser campeãs. Ensina-lhes o passe, a manchete,
+        o remate e o trabalho em equipa. Depois de 5 dias de treino há jogo —
+        e cada vitória vale uma medalha para ti! Começam no escalão
+        <strong>Mini A</strong>, ao nível das escolas, e podem subir até
+        <strong>Seniores</strong>, com jogos pela cidade, pela região,
+        por Portugal inteiro… e pelo mundo!
       </p>
       <button id="btn-novo-jogo" class="btn btn-grande">Novo Jogo</button>
       <button id="btn-continuar" class="btn btn-grande btn-secundario escondido">Continuar</button>
@@ -107,7 +114,13 @@
   <section id="ecra-plantel" class="ecra">
     <div class="painel">
       <h2>O plantel — 16 jogadoras</h2>
-      <p class="descricao">Raparigas da secundária, equipamento verde, branco e preto.</p>
+      <p id="plantel-descricao" class="descricao"></p>
+      <div class="cartao clube-kit">
+        <h3>🎽 Cores do equipamento</h3>
+        <div class="kit-linha"><span>Camisola:</span><div class="opcoes" id="op-kit-camisola"></div></div>
+        <div class="kit-linha"><span>Calções:</span><div class="opcoes" id="op-kit-calcoes"></div></div>
+        <p class="descricao">A líbero joga com as cores trocadas, como no voleibol a sério. Joelheiras e cabelo apanhado são sempre obrigatórios!</p>
+      </div>
       <div id="plantel-lista" class="plantel-grelha"></div>
       <button id="btn-voltar-hub" class="btn">← Voltar ao balneário</button>
     </div>
@@ -233,5 +246,10 @@
   </section>
 
   <script src="game.js"></script>
+  <script>
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    }
+  </script>
 </body>
 </html>

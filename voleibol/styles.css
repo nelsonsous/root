@@ -9,6 +9,11 @@
   --branco: #ffffff;
   --creme: #f4f6f3;
   --dourado: #e8b923;
+  /* Cores do equipamento (o jogo muda estas variáveis) */
+  --kit-camisola: #1b7a43;
+  --kit-calcoes: #15181a;
+  --kit-texto-camisola: #ffffff;
+  --kit-texto-calcoes: #ffffff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -177,22 +182,31 @@ h3 { color: var(--verde-claro); margin-bottom: 8px; }
 .cartao-jogadora.selecionavel { cursor: pointer; }
 .cartao-jogadora.selecionada { border-color: var(--verde-claro); background: var(--verde-escuro); }
 .cartao-jogadora h4 { color: var(--branco); margin-bottom: 2px; }
-.cartao-jogadora .posicao { color: var(--verde-claro); font-size: 0.82rem; font-weight: 600; margin-bottom: 8px; }
-.cartao-jogadora .numero {
-  position: absolute; top: 10px; right: 12px;
-  background: var(--verde);
+.cartao-jogadora .posicao { color: var(--verde-claro); font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; }
+.cartao-cabeca { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.mini-jogadora svg { width: 46px; height: auto; display: block; }
+.numero-edit { font-size: 0.82rem; color: #c9d2cc; }
+.numero-edit input {
+  width: 52px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  border: 2px solid var(--verde);
+  background: #15181a;
   color: var(--branco);
-  border: 2px solid var(--branco);
-  border-radius: 50%;
-  width: 30px; height: 30px;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 .stat-linha { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 0.78rem; }
 .stat-linha span:first-child { width: 72px; color: #c9d2cc; }
 .stat-barra { flex: 1; height: 8px; background: #2c3236; border-radius: 4px; overflow: hidden; }
 .stat-valor { height: 100%; background: var(--verde-claro); border-radius: 4px; }
 .stat-valor.energia { background: #d4a017; }
+
+/* ===== Equipamento do clube ===== */
+.clube-kit { margin-bottom: 14px; }
+.kit-linha { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.kit-linha > span { min-width: 76px; font-weight: 600; color: #c9d2cc; }
+.kit-linha .opcoes { margin-bottom: 0; }
 
 /* ===== Treino ===== */
 .exercicios-grelha {
@@ -299,8 +313,8 @@ h3 { color: var(--verde-claro); margin-bottom: 8px; }
   margin: 0 auto;
   border: 2px solid;
 }
-.jogadora-campo.nos .camisola { background: var(--verde); color: var(--branco); border-color: var(--branco); }
-.jogadora-campo.nos.libero .camisola { background: var(--branco); color: var(--preto); border-color: var(--preto); }
+.jogadora-campo.nos .camisola { background: var(--kit-camisola); color: var(--kit-texto-camisola); border-color: var(--kit-calcoes); }
+.jogadora-campo.nos.libero .camisola { background: var(--kit-calcoes); color: var(--kit-texto-calcoes); border-color: var(--kit-camisola); }
 .jogadora-campo.eles .camisola { background: #8d2f2f; color: #fff; border-color: #f3cdcd; }
 .jogadora-campo .nome-campo {
   font-size: 0.62rem; color: #fff; text-shadow: 0 1px 2px #000; font-weight: 600;
