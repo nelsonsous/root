@@ -829,6 +829,74 @@ function makeLesson(def) {
   return { id: def.id, lessonDef: def, forceStaff: true, title: def.title, emoji: def.emoji, bpm: 90, notes };
 }
 
+/* ===================== Percurso (curso passo a passo) ===================== */
+/* Cada passo desbloqueia ao ganhar pelo menos 1 estrela no anterior. */
+
+const COURSE = [
+  { type: "lesson", id: "ler1" },
+  { type: "song", id: "brilha" },
+  { type: "song", id: "cordeirinho" },
+  { type: "lesson", id: "ler2" },
+  { type: "song", id: "sino" },
+  { type: "song", id: "freijaco" },
+  { type: "song", id: "alegria" },
+  { type: "lesson", id: "ler3" },
+  { type: "song", id: "brilha2" },
+  { type: "lesson", id: "ler4" },
+  { type: "song", id: "ode2" },
+  { type: "song", id: "parabens" },
+];
+
+let returnTo = "songs"; // para onde voltar ao sair do piano: songs | lessons | course
+
+function courseStepDef(step) {
+  return step.type === "song"
+    ? SONGS.find((s) => s.id === step.id)
+    : LESSONS.find((l) => l.id === step.id);
+}
+
+function startCourseStep(step) {
+  returnTo = "course";
+  const def = courseStepDef(step);
+  startSong(step.type === "song" ? def : makeLesson(def));
+}
+
+function renderCourse() {
+  const list = $("course-list");
+  list.innerHTML = "";
+  let unlocked = true;
+  COURSE.forEach((step, i) => {
+    const def = courseStepDef(step);
+    const best = Number(localStorage.getItem(`piano.best.${step.id}`) || 0);
+    const item = document.createElement("button");
+    item.className = "course-item" + (i % 2 ? " right" : "") + (unlocked ? "" : " locked");
+    item.innerHTML = `
+      <span class="course-num">${unlocked ? i + 1 : "🔒"}</span>
+      <span class="course-emoji">${def.emoji}</span>
+      <span class="course-info">
+        <span class="course-name">${def.title}</span>
+        <span class="course-stars">${best ? "⭐".repeat(best) : unlocked ? "por fazer" : ""}</span>
+      </span>`;
+    if (unlocked) item.addEventListener("click", () => startCourseStep(step));
+    else item.disabled = true;
+    list.appendChild(item);
+    unlocked = best >= 1; // o próximo abre com pelo menos 1 estrela neste
+  });
+}
+
+function showReturnScreen() {
+  if (returnTo === "course") {
+    renderCourse();
+    showScreen("course");
+  } else if (returnTo === "lessons") {
+    renderLessons();
+    showScreen("lessons");
+  } else {
+    renderSongList();
+    showScreen("songs");
+  }
+}
+
 function renderLessons() {
   const list = $("lesson-list");
   list.innerHTML = "";
@@ -846,7 +914,7 @@ function renderLessons() {
         <span class="song-meta">${def.desc}</span>
       </span>
       <span class="song-best">${best ? "⭐".repeat(best) : ""}</span>`;
-    card.addEventListener("click", () => startSong(makeLesson(def)));
+    card.addEventListener("click", () => { returnTo = "lessons"; startSong(makeLesson(def)); });
     list.appendChild(card);
   });
 }
@@ -1065,7 +1133,7 @@ function renderSongList() {
         <span class="song-meta">${"🎵".repeat(s.level)} · ${s.notes.length} notas${hands}</span>
       </span>
       <span class="song-best">${best ? "⭐".repeat(best) : ""}</span>`;
-    card.addEventListener("click", () => startSong(s));
+    card.addEventListener("click", () => { returnTo = "songs"; startSong(s); });
     list.appendChild(card);
   });
 }
@@ -1107,20 +1175,14 @@ function init() {
   $("btn-back-piano").addEventListener("click", () => {
     stopDemo();
     if (mode === "learn") {
-      // o microfone fica ligado para a próxima música/lição
-      if (song && song.lessonDef) {
-        renderLessons();
-        showScreen("lessons");
-      } else {
-        renderSongList();
-        showScreen("songs");
-      }
+      showReturnScreen(); // o microfone fica ligado para a próxima música/lição
     } else {
       stopMic();
       showScreen("home");
     }
   });
   $("btn-read").addEventListener("click", () => { renderLessons(); showScreen("lessons"); });
+  $("btn-course").addEventListener("click", () => { renderCourse(); showScreen("course"); });
   $("btn-restart").addEventListener("click", () => startSong(song));
   $("btn-demo").addEventListener("click", playDemo);
   $("btn-mic").addEventListener("click", toggleMic);
@@ -1142,8 +1204,7 @@ function init() {
   });
   $("btn-more-songs").addEventListener("click", () => {
     $("celebrate").classList.add("hidden");
-    renderSongList();
-    showScreen("songs");
+    showReturnScreen();
   });
 
   // Desbloquear o áudio e carregar as amostras de piano no primeiro toque (iOS)
