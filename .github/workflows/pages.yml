@@ -1,0 +1,30 @@
+name: Publicar Piano Mágico no GitHub Pages
+
+# Mantém a branch gh-pages atualizada com o conteúdo de simple-piano/.
+# Só precisa de "contents: write" (não exige permissões de administrador).
+
+on:
+  push:
+    branches: [claude/apple-watch-padel-app-jcgJO]
+    paths: ["simple-piano/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./simple-piano
+          # keep_files preserva /voleibol (Treinadora de Voleibol) no site.
+          keep_files: true
+          commit_message: "deploy: Piano Mágico"
