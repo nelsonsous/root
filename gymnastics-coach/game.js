@@ -713,29 +713,15 @@ function showMoves(atleta) {
   $('btn-moves-back').onclick = () => showGym();
 }
 
-/* ---------- Treino: demonstra o movimento com o dedo ---------- */
+/* ---------- Treino: demonstra o movimento com o dedo ----------
+   A professora arrasta o dedo ao longo de um arco da esquerda (rosa)
+   até à estrela, da direita. A ginasta executa o movimento ao lado,
+   acompanhando o avanço do dedo. O arco é monotónico (nunca volta para
+   trás), o que torna o arrastar fácil e fiável no telemóvel.            */
 
-const TRACE_S = 2.0;       // escala da figura no treino
-const TRACE_R = 30;        // raio para "apanhar" o ponto seguinte
-let trace = null;          // estado do tracado da tentativa atual
-
-function buildTracePath(animId, cx, gy, s) {
-  const raw = [];
-  for (let i = 0; i <= 80; i++) {
-    const t = i / 80;
-    const J = computeJoints(Object.assign({}, P_STAND, samplePose(animId, t)), cx, gy, s);
-    raw.push({ t, x: J.headC[0], y: J.headC[1] });
-  }
-  // simplifica: mantem pontos com pelo menos 12px de distancia
-  const pts = [raw[0]];
-  for (const p of raw) {
-    const l = pts[pts.length - 1];
-    if (Math.hypot(p.x - l.x, p.y - l.y) >= 12) pts.push(p);
-  }
-  const last = raw[raw.length - 1];
-  if (pts[pts.length - 1] !== last) pts.push(last);
-  return pts;
-}
+const TRACE_S = 1.7;        // escala da figura no treino
+const TRACE_TOL = 72;       // distância vertical tolerada ao arco (px)
+let trace = null;           // estado do traçado da tentativa atual
 
 function startTraining(atleta, move) {
   trainingCtx = { atleta, move, attempts: 0, best: null };
@@ -750,14 +736,23 @@ function setupTrace() {
   const tc = trainingCtx;
   const cv = $('cv-training');
   const w = cv.width, h = cv.height;
-  const gy = h - 42; // mesmo nivel devolvido por drawGymBg
-  const cx = w * 0.55;
+  const gy = h - 42;                 // nível do colchão (drawGymBg)
+  const cx = w * 0.21;               // a ginasta executa à esquerda
+  const gx0 = w * 0.34, gx1 = w * 0.94;
+  const baseY = 168, amp = 88;       // arco "arco-íris"
+  const arcY = f => baseY - amp * Math.sin(Math.PI * f);
+  const arcX = f => gx0 + (gx1 - gx0) * f;
+
+  const pts = [];
+  for (let i = 0; i <= 48; i++) { const f = i / 48; pts.push({ f, x: arcX(f), y: arcY(f) }); }
+
   trace = {
-    pts: buildTracePath(tc.move.id, cx, gy, TRACE_S),
-    idx: 0, displayT: 0, dragging: false, finished: false,
+    pts, displayT: 0, progress: 0, liveF: 0,
+    started: false, reachedMid: false, dragging: false, finished: false,
     devSum: 0, devCount: 0, breaks: 0,
   };
   window.__trace = trace; // usado pelo teste e2e
+
   const toCanvas = e => {
     const r = cv.getBoundingClientRect();
     return [(e.clientX - r.left) * w / r.width, (e.clientY - r.top) * h / r.height];
@@ -766,66 +761,87 @@ function setupTrace() {
     const t = trace;
     if (t.finished) return;
     const [px, py] = toCanvas(e);
-    let guard = 0;
-    while (t.idx < t.pts.length - 1 && guard++ < 8 &&
-           Math.hypot(px - t.pts[t.idx + 1].x, py - t.pts[t.idx + 1].y) < TRACE_R) {
-      t.idx++;
+    const f = clamp((px - gx0) / (gx1 - gx0), 0, 1);
+    const dev = Math.abs(py - arcY(f));
+    const near = dev < TRACE_TOL;
+    if (!t.started) {
+      if (near && f < 0.22) t.started = true; // tem de começar junto ao círculo rosa
+      else return;
     }
-    let dmin = Infinity;
-    for (let k = Math.max(0, t.idx - 1); k <= Math.min(t.pts.length - 1, t.idx + 3); k++) {
-      dmin = Math.min(dmin, Math.hypot(px - t.pts[k].x, py - t.pts[k].y));
+    if (near) {
+      t.liveF = f;
+      t.progress = Math.max(t.progress, f);
+      t.devSum += dev; t.devCount++;
+      if (f > 0.4 && f < 0.6) t.reachedMid = true;
+    } else {
+      t.devSum += TRACE_TOL; t.devCount++; // penaliza sair do arco
     }
-    t.devSum += dmin; t.devCount++;
-    if (t.idx >= t.pts.length - 1) finishAttempt();
+    if (t.started && t.reachedMid && t.progress >= 0.97) finishAttempt();
   };
   cv.onpointerdown = e => {
     if (trace.finished) return;
     trace.dragging = true;
-    cv.setPointerCapture(e.pointerId);
+    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
     handleMove(e);
   };
   cv.onpointermove = e => { if (trace.dragging) handleMove(e); };
-  cv.onpointerup = () => {
+  const endDrag = () => {
     if (trace.dragging) {
       trace.dragging = false;
-      if (!trace.finished && trace.idx > 0) trace.breaks++;
+      if (!trace.finished && trace.started) trace.breaks++;
     }
   };
+  cv.onpointerup = endDrag;
+  cv.onpointercancel = endDrag;
 
   const ctx = cv.getContext('2d');
   startLoop(now => {
+    const t = trace;
     ctx.clearRect(0, 0, w, h);
     drawGymBg(ctx, w, h, 'Treino · ' + tc.move.nome);
-    const t = trace;
-    // a atleta acompanha a demonstracao da professora
-    const targetT = t.pts[t.idx].t;
-    t.displayT += (targetT - t.displayT) * 0.18;
+
+    // a ginasta acompanha o avanço do dedo
+    const tgt = t.dragging && t.started ? t.liveF : t.progress;
+    t.displayT += (tgt - t.displayT) * 0.2;
     drawFigure(ctx, cx, gy, TRACE_S, samplePose(tc.move.id, t.displayT), tc.atleta.look, now);
-    // caminho pontilhado
-    for (let i = 0; i < t.pts.length; i++) {
-      ctx.fillStyle = i <= t.idx ? '#e84d8a' : '#c9b6e4';
-      ctx.beginPath();
-      ctx.arc(t.pts[i].x, t.pts[i].y, i <= t.idx ? 4 : 3, 0, Math.PI * 2);
-      ctx.fill();
+    ctx.fillStyle = '#7a6a86';
+    ctx.font = '12px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(tc.atleta.nome, cx, gy + 24);
+
+    // arco-guia: linha tracejada + pontos
+    ctx.strokeStyle = '#d9c3ec'; ctx.lineWidth = 3;
+    ctx.setLineDash([2, 9]); ctx.lineCap = 'round';
+    ctx.beginPath();
+    pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < pts.length; i += 2) {
+      ctx.fillStyle = pts[i].f <= t.progress ? '#e84d8a' : '#cdbbe6';
+      ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, 3, 0, Math.PI * 2); ctx.fill();
     }
-    // estrela no fim e marcador atual (a "mao" da professora)
-    const end = t.pts[t.pts.length - 1];
-    ctx.font = '20px serif'; ctx.textAlign = 'center';
-    ctx.fillText('⭐', end.x, end.y + 7);
+
+    // início (rosa) e fim (estrela)
+    const s0 = pts[0], end = pts[pts.length - 1];
+    ctx.fillStyle = '#e84d8a';
+    ctx.beginPath(); ctx.arc(s0.x, s0.y, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px "Segoe UI", sans-serif';
+    ctx.fillText('▶', s0.x, s0.y + 4);
+    ctx.font = '26px serif'; ctx.fillText('⭐', end.x, end.y - 14);
+
+    // marcador da "mão" da professora
+    const mf = t.finished ? 1 : (t.started ? t.progress : 0);
+    const mx = arcX(mf), my = arcY(mf);
+    const pulse = 11 + Math.sin(now / 200) * 2.5;
+    ctx.strokeStyle = '#e84d8a'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(mx, my, pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = '20px serif'; ctx.fillText('👆', mx, my + 30);
+
     if (!t.finished) {
-      const cur = t.pts[t.idx];
-      const pulse = 8 + Math.sin(now / 200) * 2;
-      ctx.strokeStyle = '#e84d8a'; ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(cur.x, cur.y, pulse, 0, Math.PI * 2);
-      ctx.stroke();
       ctx.fillStyle = '#b06aa0';
       ctx.font = '13px "Segoe UI", sans-serif';
-      ctx.fillText(t.idx === 0 ? 'Começa aqui! Arrasta até à ⭐' : 'Continua até à ⭐…', w / 2, h - 4);
+      ctx.fillText(!t.started ? 'Pousa o dedo no ▶ e arrasta ao longo do arco até à ⭐'
+        : 'Continua a seguir o arco até à ⭐…', w / 2, h - 8);
     }
-    ctx.fillStyle = '#7a6a86';
-    ctx.font = '12px "Segoe UI", sans-serif';
-    ctx.fillText(tc.atleta.nome, cx, gy + 24);
   });
 }
 
@@ -835,9 +851,9 @@ function finishAttempt() {
   t.finished = true;
   tc.attempts++;
   const avg = t.devSum / Math.max(1, t.devCount);
-  let score = clamp(1 - (avg - 8) / 36, 0, 1) - t.breaks * 0.08;
+  let score = clamp(1 - (avg - 6) / (TRACE_TOL - 6), 0, 1) - t.breaks * 0.06;
   score = clamp(score, 0, 1);
-  const q = clamp(0.25 + 0.7 * score + skillDe(tc.atleta, tc.move.id) / 1000, 0.05, 0.98);
+  const q = clamp(0.3 + 0.65 * score + skillDe(tc.atleta, tc.move.id) / 1000, 0.05, 0.98);
   const stars = clamp(Math.round(q * 5 + 0.3), 1, 5);
   const attempt = { stars, q, breaks: t.breaks };
   if (!tc.best || stars > tc.best.stars || (stars === tc.best.stars && q > tc.best.q)) tc.best = attempt;
