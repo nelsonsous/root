@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treinadora de Voleibol — Liga das Escolas</title>
+  <meta name="theme-color" content="#0e4d2a">
+  <meta name="description" content="Sê treinador ou treinadora de uma equipa de voleibol: treina 16 jogadoras e ganha medalhas de Mini A até Seniores!">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ECRÃ INICIAL -->
+  <section id="ecra-inicio" class="ecra ativo">
+    <div class="painel painel-centro">
+      <div class="logo-bola">🏐</div>
+      <h1>Treinadora de Voleibol</h1>
+      <p class="subtitulo">Liga das Escolas Secundárias de Portugal</p>
+      <p class="descricao">
+        És a pessoa que treina a equipa <strong>Verde-Branco-Preto</strong>:
+        16 raparigas que sonham ser campeãs. Ensina-lhes o passe, a manchete,
+        o remate e o trabalho em equipa. Depois de 5 dias de treino há jogo —
+        e cada vitória vale uma medalha para ti! Começam no escalão
+        <strong>Mini A</strong>, ao nível das escolas, e podem subir até
+        <strong>Seniores</strong>, com jogos pela cidade, pela região,
+        por Portugal inteiro… e pelo mundo!
+      </p>
+      <button id="btn-novo-jogo" class="btn btn-grande">Novo Jogo</button>
+      <button id="btn-continuar" class="btn btn-grande btn-secundario escondido">Continuar</button>
+    </div>
+  </section>
+
+  <!-- CRIAÇÃO DO TREINADOR / TREINADORA -->
+  <section id="ecra-treinador" class="ecra">
+    <div class="painel">
+      <h2>Cria o teu treinador ou treinadora</h2>
+      <div class="criacao-grelha">
+        <div class="criacao-avatar">
+          <div id="avatar-preview"></div>
+          <input type="text" id="input-nome-treinador" maxlength="18" placeholder="O teu nome">
+        </div>
+        <div class="criacao-opcoes">
+          <div class="grupo-opcao">
+            <h3>Género</h3>
+            <div class="opcoes" id="op-genero"></div>
+          </div>
+          <div class="grupo-opcao">
+            <h3>Cor da pele</h3>
+            <div class="opcoes" id="op-pele"></div>
+          </div>
+          <div class="grupo-opcao">
+            <h3>Cor dos olhos</h3>
+            <div class="opcoes" id="op-olhos"></div>
+          </div>
+          <div class="grupo-opcao">
+            <h3>Cabelo</h3>
+            <div class="opcoes" id="op-cabelo-estilo"></div>
+            <div class="opcoes" id="op-cabelo-cor"></div>
+          </div>
+          <div class="grupo-opcao">
+            <h3>Roupa</h3>
+            <div class="opcoes" id="op-roupa"></div>
+            <div class="opcoes" id="op-roupa-cor"></div>
+          </div>
+        </div>
+      </div>
+      <button id="btn-comecar" class="btn btn-grande">Começar a treinar!</button>
+    </div>
+  </section>
+
+  <!-- HUB / BALNEÁRIO -->
+  <section id="ecra-hub" class="ecra">
+    <div class="painel">
+      <header class="hub-topo">
+        <div id="hub-avatar" class="avatar-mini"></div>
+        <div class="hub-info">
+          <h2 id="hub-nome"></h2>
+          <p id="hub-titulo"></p>
+        </div>
+        <div class="hub-medalhas-resumo" id="hub-medalhas-resumo"></div>
+      </header>
+
+      <div class="hub-grelha">
+        <div class="cartao">
+          <h3>📅 Esta semana</h3>
+          <div id="hub-semana" class="semana-dias"></div>
+          <p id="hub-proximo-jogo"></p>
+          <button id="btn-ir-treino" class="btn btn-grande"></button>
+        </div>
+        <div class="cartao">
+          <h3>🗺️ Digressão por Portugal</h3>
+          <ul id="hub-cidades" class="lista-cidades"></ul>
+        </div>
+      </div>
+
+      <div class="hub-grelha">
+        <div class="cartao">
+          <h3>🏅 A tua vitrina de medalhas</h3>
+          <div id="hub-vitrina" class="vitrina"></div>
+        </div>
+        <div class="cartao">
+          <h3>📋 Equipa</h3>
+          <p id="hub-equipa-resumo"></p>
+          <button id="btn-ver-plantel" class="btn">Ver as 16 jogadoras</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLANTEL -->
+  <section id="ecra-plantel" class="ecra">
+    <div class="painel">
+      <h2>O plantel — 16 jogadoras</h2>
+      <p id="plantel-descricao" class="descricao"></p>
+      <div class="cartao clube-kit">
+        <h3>🎽 Cores do equipamento</h3>
+        <div class="kit-linha"><span>Camisola:</span><div class="opcoes" id="op-kit-camisola"></div></div>
+        <div class="kit-linha"><span>Calções:</span><div class="opcoes" id="op-kit-calcoes"></div></div>
+        <p class="descricao">A líbero joga com as cores trocadas, como no voleibol a sério. Joelheiras e cabelo apanhado são sempre obrigatórios!</p>
+      </div>
+      <div id="plantel-lista" class="plantel-grelha"></div>
+      <button id="btn-voltar-hub" class="btn">← Voltar ao balneário</button>
+    </div>
+  </section>
+
+  <!-- TREINO -->
+  <section id="ecra-treino" class="ecra">
+    <div class="painel">
+      <h2 id="treino-titulo"></h2>
+      <p id="treino-descricao" class="descricao"></p>
+
+      <div id="treino-escolha">
+        <h3>O que vais ensinar nesta sessão?</h3>
+        <div id="treino-exercicios" class="exercicios-grelha"></div>
+      </div>
+
+      <div id="treino-minijogo" class="escondido">
+        <h3 id="minijogo-titulo"></h3>
+        <p id="minijogo-instrucao" class="descricao"></p>
+        <div class="barra-precisao">
+          <div class="zona zona-fraca"></div>
+          <div class="zona zona-boa"></div>
+          <div class="zona zona-perfeita"></div>
+          <div class="zona zona-boa"></div>
+          <div class="zona zona-fraca"></div>
+          <div id="cursor-precisao" class="cursor-precisao"></div>
+        </div>
+        <button id="btn-parar-cursor" class="btn btn-grande">Apita agora! 🔔</button>
+      </div>
+
+      <div id="treino-resultado" class="escondido">
+        <h3 id="resultado-titulo"></h3>
+        <ul id="resultado-linhas" class="linhas-treino"></ul>
+        <button id="btn-continuar-treino" class="btn btn-grande">Continuar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRÉ-JOGO: ESCOLHER AS 6 TITULARES -->
+  <section id="ecra-prejogo" class="ecra">
+    <div class="painel">
+      <h2 id="prejogo-titulo"></h2>
+      <p id="prejogo-descricao" class="descricao"></p>
+      <p class="prejogo-contagem">Titulares escolhidas: <strong id="prejogo-contador">0</strong> / 6 — as outras ficam no banco como suplentes</p>
+      <div id="prejogo-lista" class="plantel-grelha"></div>
+      <div class="botoes-linha">
+        <button id="btn-auto-seis" class="btn btn-secundario">Escolher as 6 mais fortes</button>
+        <button id="btn-comecar-jogo" class="btn btn-grande" disabled>Começar o jogo!</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOGO -->
+  <section id="ecra-jogo" class="ecra">
+    <div class="painel painel-jogo">
+      <div class="placar">
+        <div class="placar-equipa nos">
+          <span class="placar-nome">Verde-Branco-Preto</span>
+          <span id="placar-sets-nos" class="placar-sets">0</span>
+          <span id="placar-pontos-nos" class="placar-pontos">0</span>
+        </div>
+        <div class="placar-meio">
+          <span id="placar-set-atual">1.º set</span>
+          <span id="placar-cidade"></span>
+        </div>
+        <div class="placar-equipa eles">
+          <span class="placar-nome" id="placar-nome-eles"></span>
+          <span id="placar-sets-eles" class="placar-sets">0</span>
+          <span id="placar-pontos-eles" class="placar-pontos">0</span>
+        </div>
+      </div>
+
+      <div id="campo" class="campo">
+        <div class="campo-meio-eles"></div>
+        <div class="campo-meio-nos"></div>
+        <div class="linha-ataque eles"></div>
+        <div class="linha-ataque nos"></div>
+        <div class="rede"></div>
+        <div class="antena esq"></div>
+        <div class="antena dir"></div>
+        <div id="treinador-campo" class="treinador-campo"></div>
+        <div id="bola" class="bola">🏐</div>
+      </div>
+
+      <div id="em-campo-stats" class="em-campo-stats"></div>
+
+      <div id="comentarios" class="comentarios"></div>
+
+      <div class="botoes-linha">
+        <button id="btn-jogar-ponto" class="btn btn-grande">Jogar ponto ▶</button>
+        <button id="btn-auto-jogar" class="btn btn-secundario">Auto ⏩</button>
+        <button id="btn-substituicao" class="btn btn-secundario">Substituição 🔄</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBSTITUIÇÕES (modal) -->
+  <div id="modal-subs" class="modal escondido">
+    <div class="modal-caixa">
+      <h3>Substituição</h3>
+      <p class="descricao">Escolhe quem sai do campo e quem entra do banco. Jogadoras frescas jogam melhor!</p>
+      <div class="subs-grelha">
+        <div>
+          <h4>Em campo (sai)</h4>
+          <div id="subs-campo"></div>
+        </div>
+        <div>
+          <h4>No banco (entra)</h4>
+          <div id="subs-banco"></div>
+        </div>
+      </div>
+      <div class="botoes-linha">
+        <button id="btn-confirmar-sub" class="btn" disabled>Confirmar troca</button>
+        <button id="btn-fechar-subs" class="btn btn-secundario">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <section id="ecra-resultado" class="ecra">
+    <div class="painel painel-centro">
+      <h2 id="resultado-jogo-titulo"></h2>
+      <p id="resultado-jogo-texto" class="descricao"></p>
+      <div id="medalha-cerimonia" class="escondido">
+        <div class="medalha-grande" id="medalha-svg"></div>
+        <p id="medalha-texto" class="medalha-texto"></p>
+      </div>
+      <button id="btn-resultado-continuar" class="btn btn-grande">Continuar</button>
+    </div>
+  </section>
+
+  <script src="game.js"></script>
+  <script>
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    }
+  </script>
+</body>
+</html>

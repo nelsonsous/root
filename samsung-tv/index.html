@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, initial-scale=1.0, user-scalable=no">
+  <title>TV Base — Samsung Smart TV</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="topo">
+    <h1>📺 TV Base</h1>
+    <p class="subtitulo">Projeto-base para a tua Samsung Smart TV</p>
+  </header>
+
+  <main>
+    <p class="ajuda">Usa as setas <strong>← ↑ ↓ →</strong> do comando para navegar e <strong>OK</strong> para escolher. Carrega em <strong>Voltar</strong> para sair.</p>
+
+    <!-- Grelha de "tiles" navegáveis pelo comando -->
+    <nav class="grelha" id="grelha">
+      <button class="tile" data-acao="voleibol">🏐<span>Voleibol</span></button>
+      <button class="tile" data-acao="ginastica">🤸<span>Ginástica</span></button>
+      <button class="tile" data-acao="piano">🎹<span>Piano</span></button>
+      <button class="tile" data-acao="sobre">ℹ️<span>Sobre</span></button>
+    </nav>
+
+    <div class="mensagem" id="mensagem" aria-live="polite"></div>
+  </main>
+
+  <footer class="rodape">
+    <span class="tecla vermelha">●</span> Sair &nbsp;·&nbsp;
+    <span>Comando da TV pronto</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

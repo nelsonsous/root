@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estrelas da Ginástica — Jogo da Professora</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header id="hud" class="hidden">
+  <div class="hud-left">
+    <span id="hud-coach">👩‍🏫</span>
+    <span id="hud-tier"></span>
+  </div>
+  <div class="hud-right">
+    <span id="hud-week"></span>
+    <span id="hud-points" title="Pontos de Professora">⭐ 0</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ===================== MENU ===================== -->
+<section id="screen-menu" class="screen">
+  <div class="menu-card">
+    <h1>🤸‍♀️ Estrelas da Ginástica</h1>
+    <p class="subtitle">És a professora! Treina, orienta e leva as tuas atletas da escola até ao campeonato internacional.</p>
+    <label class="coach-name-row">O teu nome:
+      <input id="inp-coach-name" type="text" maxlength="18" value="Professora Ana">
+    </label>
+    <div class="menu-buttons">
+      <button id="btn-new" class="big primary">✨ Novo Jogo</button>
+      <button id="btn-continue" class="big">▶ Continuar</button>
+    </div>
+    <details class="howto">
+      <summary>📖 Como jogar</summary>
+      <ul>
+        <li><b>Treina</b> as atletas: escolhe um movimento (aranha, ponte, levantar…) e <b>demonstra-o tu com o dedo</b>, arrastando ao longo do caminho do movimento. Os juízes avaliam a tua demonstração com estrelas — quanto melhor fizeres, mais a atleta evolui!</li>
+        <li>Mantém as atletas <b>felizes</b> e com <b>energia</b>: descansa-as e elogia-as.</li>
+        <li>No fim de cada época, <b>monta a coreografia</b> de cada atleta com os movimentos que treinaram e ganha o campeonato.</li>
+        <li>Sobe de escalão: <b>Escola → Cidade → Regional → Nacional → Internacional</b>.</li>
+        <li>No <b>Vestiário</b> podes escolher a roupa de ginástica, o cabelo e os adereços de cada atleta e da professora.</li>
+        <li>Ganhas <b>Pontos de Professora</b> por fazer evoluir as atletas, mantê-las felizes e vencer competições.</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<!-- ===================== VESTIÁRIO ===================== -->
+<section id="screen-custom" class="screen hidden">
+  <h2>🎀 Vestiário</h2>
+  <div class="custom-layout">
+    <div class="custom-left">
+      <div id="custom-tabs" class="tabs"></div>
+      <canvas id="cv-custom" width="320" height="340"></canvas>
+      <label class="name-row">Nome: <input id="inp-person-name" type="text" maxlength="18"></label>
+    </div>
+    <div class="custom-right" id="custom-options"></div>
+  </div>
+  <div class="bottom-bar">
+    <button id="btn-custom-done" class="big primary">Está lindo! Voltar ao ginásio</button>
+  </div>
+</section>
+
+<!-- ===================== GINÁSIO (HUB) ===================== -->
+<section id="screen-gym" class="screen hidden">
+  <canvas id="cv-gym" width="760" height="240"></canvas>
+  <div id="gym-message" class="gym-message"></div>
+  <div id="athlete-cards" class="cards"></div>
+  <div class="bottom-bar">
+    <button id="btn-wardrobe">🎀 Vestiário</button>
+    <button id="btn-endweek" class="primary">⏭ Terminar a semana</button>
+    <button id="btn-competition" class="primary gold hidden">🏆 Preparar a coreografia!</button>
+  </div>
+</section>
+
+<!-- ===================== ESCOLHER MOVIMENTO ===================== -->
+<section id="screen-moves" class="screen hidden">
+  <h2 id="moves-title">Escolher movimento para treinar</h2>
+  <p class="hint">A professora escolhe o que a atleta vai treinar. Movimentos mais difíceis valem mais pontos na coreografia!</p>
+  <div id="move-list" class="move-list"></div>
+  <div class="bottom-bar"><button id="btn-moves-back">← Voltar</button></div>
+</section>
+
+<!-- ===================== TREINO ===================== -->
+<section id="screen-training" class="screen hidden">
+  <h2 id="tr-title">Treino</h2>
+  <canvas id="cv-training" width="760" height="300"></canvas>
+
+  <div id="tr-instr" class="tr-panel">
+    <p>✋ Agora és tu, professora! Pousa o dedo (ou o rato) no <b>▶ rosa</b> e <b>arrasta ao longo do arco</b>
+    até à <b>⭐</b>, sem levantar. A ginasta vai executando o movimento à medida que avanças!</p>
+    <p class="hint">Quanto mais certinho seguires o arco até ao fim, melhor a avaliação dos juízes.</p>
+  </div>
+
+  <div id="tr-result" class="tr-panel hidden">
+    <div id="tr-result-text"></div>
+    <button id="btn-retry">🔁 Tentar de novo</button>
+    <button id="btn-tr-done" class="primary">Continuar</button>
+  </div>
+</section>
+
+<!-- ===================== COREOGRAFIA ===================== -->
+<section id="screen-choreo" class="screen hidden">
+  <h2 id="choreo-title">🎵 Montar a coreografia</h2>
+  <p class="hint">Escolhe a sequência de movimentos de cada atleta (mínimo 2). Só entram movimentos bem treinados — quantos mais e mais difíceis, maior a nota!
+  <div id="choreo-tabs" class="tabs"></div>
+  <div class="choreo-layout">
+    <div class="choreo-col">
+      <h3>Movimentos aprendidos</h3>
+      <div id="choreo-available" class="chip-list"></div>
+    </div>
+    <div class="choreo-col">
+      <h3 id="choreo-seq-title">Coreografia</h3>
+      <div id="choreo-sequence" class="chip-list seq"></div>
+      <div id="choreo-difficulty" class="difficulty"></div>
+      <button id="btn-preview">▶ Pré-visualizar</button>
+    </div>
+  </div>
+  <canvas id="cv-choreo" width="760" height="260" class="hidden"></canvas>
+  <div class="bottom-bar">
+    <button id="btn-choreo-back">← Voltar aos treinos</button>
+    <button id="btn-start-comp" class="primary gold" disabled>🏆 Ir para a competição!</button>
+  </div>
+</section>
+
+<!-- ===================== COMPETIÇÃO ===================== -->
+<section id="screen-competition" class="screen hidden">
+  <h2 id="comp-title">🏆 Competição</h2>
+  <canvas id="cv-comp" width="760" height="300"></canvas>
+  <div id="comp-status" class="comp-status"></div>
+  <div id="comp-scores" class="comp-scores"></div>
+  <div class="bottom-bar">
+    <button id="btn-comp-next" class="primary hidden">Continuar</button>
+  </div>
+</section>
+
+<!-- ===================== FINAL ===================== -->
+<section id="screen-final" class="screen hidden">
+  <div class="menu-card">
+    <h1 id="final-title">🏅 Parabéns!</h1>
+    <div id="final-text"></div>
+    <button id="btn-final-menu" class="big primary">Voltar ao menu</button>
+  </div>
+</section>
+
+</main>
+
+<script src="game.js"></script>
+</body>
+</html>
