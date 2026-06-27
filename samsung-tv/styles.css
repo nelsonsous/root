@@ -1,0 +1,76 @@
+/*
+  Estilos pensados para TV: ecrã 1920x1080, visto de longe.
+  Regra de ouro da TV — texto grande, contraste forte, e um "foco"
+  bem visível (a borda que mostra onde está o cursor do comando).
+*/
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 1920px;
+  height: 1080px;
+  background: radial-gradient(circle at 50% 20%, #1b2a4a 0%, #0b1224 70%);
+  color: #fff;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  overflow: hidden;
+  /* "Safe area" — as TVs cortam as bordas; deixa margem de segurança */
+  padding: 60px 90px;
+}
+
+.topo h1 { font-size: 72px; }
+.subtitulo { font-size: 30px; color: #9fb3d1; margin-top: 8px; }
+
+.ajuda {
+  font-size: 28px;
+  color: #cdd9ee;
+  margin: 50px 0 40px;
+}
+.ajuda strong { color: #ffd34d; }
+
+.grelha {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  height: 320px;
+  border: 6px solid transparent;
+  border-radius: 28px;
+  background: #16223f;
+  color: #fff;
+  font-size: 120px;          /* o emoji */
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.tile span { font-size: 36px; }
+
+/* O FOCO — o coração da navegação por comando.
+   A classe .focado é adicionada por JS ao tile selecionado. */
+.tile.focado {
+  border-color: #ffd34d;
+  background: #243a6b;
+  transform: scale(1.06);
+  box-shadow: 0 0 40px rgba(255, 211, 77, .45);
+}
+
+.mensagem {
+  margin-top: 60px;
+  font-size: 34px;
+  min-height: 50px;
+  color: #8effc0;
+}
+
+.rodape {
+  position: absolute;
+  bottom: 50px;
+  left: 90px;
+  font-size: 26px;
+  color: #9fb3d1;
+}
+.tecla { font-size: 30px; vertical-align: middle; }
+.tecla.vermelha { color: #ff5a5a; }

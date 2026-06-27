@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  config.xml — ficheiro de configuração da app Tizen (Samsung Smart TV).
+  É o equivalente, na TV, ao manifest.webmanifest das tuas PWAs.
+  O "id" tem de ter o prefixo do teu certificado de programador.
+  Substitui "Rtff123456" pelo ID do teu pacote depois de criares o certificado.
+-->
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:tizen="http://tizen.org/ns/widgets"
+        id="http://com.exemplo.tvbase/TVBase"
+        version="1.0.0"
+        viewmodes="maximized">
+
+  <tizen:application id="Rtff123456.TVBase"
+                     package="Rtff123456"
+                     required_version="6.0"/>
+
+  <name>TV Base</name>
+  <description>Projeto-base para apps na Samsung Smart TV (Tizen).</description>
+
+  <icon src="icon.png"/>
+  <content src="index.html"/>
+
+  <!-- Ecrã cheio em Full HD -->
+  <tizen:profile name="tv"/>
+
+  <!-- Permite usar o comando da TV (teclas direcionais e coloridas) -->
+  <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+
+  <!-- Liga as teclas do comando que a app vai querer apanhar -->
+  <feature name="http://tizen.org/feature/screen.size.normal.1080.1920"/>
+
+  <tizen:setting screen-orientation="landscape"
+                 context-menu="disable"
+                 background-support="disable"
+                 encryption="disable"
+                 hwkey-event="enable"/>
+</widget>
